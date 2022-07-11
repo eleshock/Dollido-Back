@@ -4,6 +4,7 @@
     "start": "yarn server"
   },
   "dependencies": {
+    "core-js": "^3.23.4",
     "express": "^4.18.1"
   },
   "devDependencies": {
