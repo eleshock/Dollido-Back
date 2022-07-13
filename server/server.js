@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
-const test = require("./Router/test");
+const api = require("./Router/api");
 const path = require("path");
-const router = require("./Router/test");
+const router = require("./Router/api");
 
-app.use("/api", test);
+app.use("/api", api);
 app.use(express.static('public'));
 
 const port = 5000;
