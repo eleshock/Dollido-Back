@@ -1,16 +1,17 @@
-const express = require("express");
+import express from "express";
+import http from "http";
+import api from "./Router/api";
+import cors from "cors";
+import webSocket from "./socket";
+
 const app = express();
-const server = require('http').createServer(app);
-const api = require("./Router/api");
-const path = require("path");
-const router = require("./Router/api");
-const webSocket = require("./socket");
+const server = http.createServer(app);
 
-
+app.use(cors());
 app.use("/api", api);
-app.use(express.static('public'));
+app.use(express.static('./server/public'));
 
 const port = 5000;
-server.listen(port, () => console.log(`server is running on port ${port}`))
+server.listen(port);
 
 webSocket(server);

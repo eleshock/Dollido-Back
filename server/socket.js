@@ -1,13 +1,18 @@
 const rooms = {};
-const express = require("express");
+import express from "express";
+import http from "http";
+import { Server } from "socket.io";
+
 const app = express();
-const server = require('http').createServer(app);
-const io = require("socket.io")(server, {
+const server = http.createServer(app);
+
+const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   }
 });
+
 // 해당 socket이 방을 나가는 경우
 const outRoom = (socket) => {
   let theID = "";
