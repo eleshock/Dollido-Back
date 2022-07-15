@@ -12,15 +12,17 @@ const io = require("socket.io")(server, {
 const outRoom = (socket) => {
   let theID = "";
   Object.entries(rooms).forEach((room) => {
-    let username = "";
+    let nickname = "";
     let exUserStreamID = "";
+    // console.log(socket)
     const newRoomMembers = room[1].members.filter((v) => {
+      console.log(room[1]);
       if (v.socketID === socket.id) {
         theID = room[0];
-        username = v.userName;
+        nickname = v.nickName;
         exUserStreamID = v.streamID;
         io.to(theID).emit("out user", {
-          username,
+          nickname,
           streamID: exUserStreamID,
         }); // 나머지 인원에게 나간 사람 정보 broadcast
       }
@@ -30,6 +32,7 @@ const outRoom = (socket) => {
       }
     });
     room[1].members = newRoomMembers; // rooms의 정보 갱신
+    // console.log(room[1]);
   });
   io.to(theID).emit("give room list", rooms);
 };
@@ -55,11 +58,11 @@ module.exports = async (server) => {
       io.emit("give room list", rooms);
     });
 
-    socket.on("join room", ({ roomID, streamID, userName }) => {
+    socket.on("join room", ({ roomID, streamID, nickName }) => {
       if (rooms[roomID]) {
-        rooms[roomID].members.push({ socketID: socket.id, streamID, userName });
+        rooms[roomID].members.push({ socketID: socket.id, streamID, nickName });
       } else {
-        rooms[roomID].members = [{ socketID: socket.id, streamID, userName }]; // 방장은 배열에 넣어서 처음 넣어줌
+        rooms[roomID].members = [{ socketID: socket.id, streamID, nickName }]; // 방장은 배열에 넣어서 처음 넣어줌
       }
       const otherUsers = rooms[roomID].members.filter(
         (id) => id.socketID !== socket.id
@@ -70,10 +73,9 @@ module.exports = async (server) => {
         io.to(roomID).emit("user joined", {
           socketID: socket.id,
           streamID,
-          userName,
+          nickName,
         }); // 기존 사람들에게는 본인이 새로 들어간다고 알림
       }
-      console.log(io.sockets.adapter.rooms);
     });
     socket.on("offer", (payload) => {
       io.to(payload.target).emit("offer", payload); // 전송하고 싶은 offer을 target에게 재전송
