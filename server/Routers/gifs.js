@@ -1,13 +1,13 @@
-import express from "express"
+import express from "express";
 import fs from "fs";
 
 const router = express.Router();
 const testFolder = './server/public';
 
-global.sendGIF = []
+global.sendGIF = [];
 global.gifCount = 0;
 
-router.get("/gifs", (req, res) => {
+router.get("/gifs", (_, res) => {
     fs.readdir(testFolder, (err, files)=>{
         if(err) {
             console.log(err);
@@ -20,10 +20,10 @@ router.get("/gifs", (req, res) => {
     return gifCount;
 });
 
-router.get("/roomGIF", (req, res) => {
+router.get("/roomGIF", (_, res) => {
     if (sendGIF.length > 0) {
         sendGIF = [];
-    }
+    };
 
     for(var i = 0; i < 22; i++) {
         const myRandomNumber = Math.floor(Math.random() * gifCount);

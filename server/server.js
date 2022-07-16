@@ -1,17 +1,25 @@
-import express from "express";
 import http from "http";
-import api from "./Router/api";
 import cors from "cors";
-import webSocket from "./socket";
+import express from "express";
+import webSocket from "./Routers/socket";
 
+// routers import
+import apiGifs from "./Routers/gifs";
+import apiMember from "./Routers/member";
+import apiTest from "./Routers/test";
+
+const port = 5000;
 const app = express();
 const server = http.createServer(app);
 
 app.use(cors());
-app.use("/api", api);
 app.use(express.static('./server/public'));
 
-const port = 5000;
-server.listen(port);
+// routers
+app.use("/api/test", apiTest);
+app.use("/api/gifs", apiGifs);
+app.use("/api/member", apiMember);
 
+// webSocket, https 연결 
 webSocket(server);
+server.listen(port, () => console.log("접속 완료"));
