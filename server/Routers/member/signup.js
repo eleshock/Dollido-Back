@@ -28,7 +28,7 @@ const handleValidate = (user_id, user_pw, user_nick) => {
     } else if(user_pw == "" || user_pw == undefined) {
         bool = false;
         msg = '비밀번호를 입력해주세요';
-    } 
+    }
 
     return {bool: bool, msg: msg};
 }
@@ -37,7 +37,7 @@ router.post("/nickCheck", async(req, res) => {
     let user_nick = req.body.user_nick;
     let bool = true;
     let msg = "사용가능한 닉네임 입니다";
-    
+
     if(user_id == "" || user_id == undefined) {
         bool = false;
         msg = "닉네임을 입력해주세요";
@@ -53,7 +53,7 @@ router.post("/idCheck", async(req, res) => {
     let user_id = req.body.user_id;
     let bool = true;
     let msg = "사용가능한 아이디 입니다";
-    
+
     if(user_id == "" || user_id == undefined) {
         bool = false;
         msg = "아이디를 입력해주세요";

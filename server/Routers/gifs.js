@@ -29,19 +29,17 @@ const { uploadFile, getFileStream } = require('../s3')
 global.sendGIF = [];
 global.gifCount = 0;
 
-router.get('/imagesk/:key', authUtil, (req, res) => {
+router.get('/imagesk/:key', (req, res) => {
     const key = req.params.key
     const readStream = getFileStream(key)
     readStream.pipe(res)
 })
 
-router.post('/images', authUtil, upload.single('image'), async (req, res) => {
+router.post('/images', upload.single('image'), async (req, res) => {
     try{
         const file = req.file
-        console.log(file)
         const result =  await uploadFile(file)
         await unlinkFile(file.path)
-        console.log(result)
         res.send({imagePath: `api/gifs/images/${result.Key}`})
     } catch (e) {
 
@@ -49,7 +47,7 @@ router.post('/images', authUtil, upload.single('image'), async (req, res) => {
     }
 })
 
-router.get('/list', authUtil, async(req,res)=> {
+router.get('/list', async(req,res)=> {
     try{
         let r = await s3.listObjectsV2({Bucket:bucketName}).promise()
         let x = r.Contents.map(item=>item.Key);
@@ -61,7 +59,7 @@ router.get('/list', authUtil, async(req,res)=> {
     return gifCount;
   })
 
-router.get("/roomGIF", authUtil, (_, res) => {
+router.get("/roomGIF", (_, res) => {
     if (sendGIF.length > 0) {
         sendGIF = [];
     };
@@ -75,7 +73,6 @@ router.get("/roomGIF", authUtil, (_, res) => {
         }
     };
 
-    console.log(gifCount);
     res.send({sendGIF});
 });
 
