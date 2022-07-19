@@ -1,13 +1,14 @@
-import express from "express";
+import { Router } from "express";
 import fs from "fs";
+import authUtil from "./member/auth";
 
-const router = express.Router();
+const router = Router();
 const testFolder = './server/public';
 
 global.sendGIF = [];
 global.gifCount = 0;
 
-router.get("/gifs", (_, res) => {
+router.get("/gifs", authUtil, (_, res) => {
     fs.readdir(testFolder, (err, files)=>{
         if(err) {
             console.log(err);
@@ -20,7 +21,7 @@ router.get("/gifs", (_, res) => {
     return gifCount;
 });
 
-router.get("/roomGIF", (_, res) => {
+router.get("/roomGIF", authUtil, (_, res) => {
     if (sendGIF.length > 0) {
         sendGIF = [];
     };
