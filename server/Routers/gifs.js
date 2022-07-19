@@ -1,6 +1,7 @@
-import express from "express";
+import authUtil from "./member/auth";
+import { Router } from "express";
 import fs from "fs";
-const router = express.Router();
+const router = Router();
 const multer  = require('multer')
 const upload = multer({ dest: 'uploads/' })
 require('dotenv').config()
@@ -24,16 +25,17 @@ const unlinkFile = util.promisify(fs.unlink)
 const { uploadFile, getFileStream } = require('../s3')
 
 
+
 global.sendGIF = [];
 global.gifCount = 0;
 
-router.get('/imagesk/:key', (req, res) => {
+router.get('/imagesk/:key', authUtil, (req, res) => {
     const key = req.params.key
     const readStream = getFileStream(key)
     readStream.pipe(res)
 })
 
-router.post('/images', upload.single('image'), async (req, res) => {
+router.post('/images', authUtil, upload.single('image'), async (req, res) => {
     try{
         const file = req.file
         console.log(file)
@@ -47,7 +49,7 @@ router.post('/images', upload.single('image'), async (req, res) => {
     }
 })
 
-router.get('/list', async(req,res)=> {
+router.get('/list', authUtil, async(req,res)=> {
     try{
         let r = await s3.listObjectsV2({Bucket:bucketName}).promise()
         let x = r.Contents.map(item=>item.Key);
@@ -59,7 +61,7 @@ router.get('/list', async(req,res)=> {
     return gifCount;
   })
 
-router.get("/roomGIF", (_, res) => {
+router.get("/roomGIF", authUtil, (_, res) => {
     if (sendGIF.length > 0) {
         sendGIF = [];
     };
