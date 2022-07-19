@@ -5,7 +5,9 @@ module.exports = async (server) => {
     cors: {
       origin: "*",
       methods: ["GET", "POST"],
+      
     }
+  
   });
   
   const rooms = {};
@@ -76,7 +78,7 @@ module.exports = async (server) => {
         socket.emit("other users", otherUsers);
 
         // 기존 사람들에게는 본인이 새로 들어간다고 알림
-        io.to(roomID).emit("user joined", {
+        socket.broadcast.to(roomID).emit("user joined", {
           socketID: socket.id,
           streamID,
           nickName,
@@ -94,7 +96,7 @@ module.exports = async (server) => {
     });
 
     socket.on("ice-candidate", (incoming) => {
-      io.to(incoming.roomID).emit("ice-candidate", incoming);
+      socket.broadcast.to(incoming.roomID).emit("ice-candidate", incoming);
     });
 
     // 창을 완전히 닫았을 경우
