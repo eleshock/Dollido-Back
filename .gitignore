@@ -136,4 +136,4 @@ package-lock.json
 /uploads
 
 # best performer video 올라가는 디렉토리
-/server/bestVideos
+*.mp4
