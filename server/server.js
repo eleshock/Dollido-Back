@@ -25,6 +25,8 @@ app.use("/api/gifs", apiGifs);
 app.use("/api/member", apiMember);
 app.use("/api/best", apiBestPerformer);
 
+
+
 // webSocket, https 연결 
 webSocket(server);
 server.listen(port, () => console.log("접속 완료"));
