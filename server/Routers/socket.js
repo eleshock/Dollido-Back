@@ -5,12 +5,11 @@ module.exports = async (server) => {
     cors: {
       origin: "*",
       methods: ["GET", "POST"],
-      transports: ['websocket', 'polling'],
-      credentials: true
-    },
-    allowEIO3: true
+
+    }
+
   });
-  
+
   const rooms = {};
 
   // 해당 socket이 방을 나가는 경우
