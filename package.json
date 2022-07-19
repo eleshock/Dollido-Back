@@ -10,7 +10,8 @@
     "multer": "^1.4.5-lts.1",
     "nodemon": "^2.0.19",
     "util": "^0.12.4",
-    "utils": "^0.3.1"
+    "utils": "^0.3.1",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.6",

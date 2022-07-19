@@ -1,24 +1,63 @@
 import express from "express";
 import fs from "fs";
-
 const router = express.Router();
-const testFolder = './server/public';
+const multer  = require('multer')
+const upload = multer({ dest: 'uploads/' })
+require('dotenv').config()
+const S3 = require('aws-sdk/clients/s3')
+
+
+const bucketName = process.env.AWS_BUCKET_NAME
+const region=process.env.AWS_BUCKET_REGION
+const accessKeyId=process.env.AWS_ACCESS_KEY
+const secretAccessKey=process.env.AWS_SECRET_KEY
+
+const s3 = new S3({
+    region,
+    accessKeyId,
+    secretAccessKey
+})
+
+const util = require('util')
+const unlinkFile = util.promisify(fs.unlink)
+
+const { uploadFile, getFileStream } = require('../s3')
+
 
 global.sendGIF = [];
 global.gifCount = 0;
 
-router.get("/gifs", (_, res) => {
-    fs.readdir(testFolder, (err, files)=>{
-        if(err) {
-            console.log(err);
-            res.status(500).send({error: "Error getting test folder."});
-        }
-        gifCount = files.length;
-        console.log(gifCount);
-        res.send({file:files});
-    });
+router.get('/imagesk/:key', (req, res) => {
+    const key = req.params.key
+    const readStream = getFileStream(key)
+    readStream.pipe(res)
+})
+
+router.post('/images', upload.single('image'), async (req, res) => {
+    try{
+        const file = req.file
+        console.log(file)
+        const result =  await uploadFile(file)
+        await unlinkFile(file.path)
+        console.log(result)
+        res.send({imagePath: `api/gifs/images/${result.Key}`})
+    } catch (e) {
+
+        console.error(e);
+    }
+})
+
+router.get('/list', async(req,res)=> {
+    try{
+        let r = await s3.listObjectsV2({Bucket:bucketName}).promise()
+        let x = r.Contents.map(item=>item.Key);
+        gifCount = x.length;
+        res.send(x)
+    } catch (e) {
+        console.error(e);
+    }
     return gifCount;
-});
+  })
 
 router.get("/roomGIF", (_, res) => {
     if (sendGIF.length > 0) {
@@ -28,7 +67,6 @@ router.get("/roomGIF", (_, res) => {
     for(var i = 0; i < 22; i++) {
         const myRandomNumber = Math.floor(Math.random() * gifCount);
         if(!sendGIF.includes(myRandomNumber)) {
-            sendGIF.push(0);
             sendGIF.push(myRandomNumber);
         } else {
             i--;
