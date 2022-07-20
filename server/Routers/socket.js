@@ -108,5 +108,9 @@ module.exports = async (server) => {
     socket.on("out room", () => {
       outRoom(socket);
     });
+
+    socket.on("smile", (peerHP, room, peerID) => {
+      socket.to(room).emit("smile", peerHP, peerID);
+    })
   });
 };
