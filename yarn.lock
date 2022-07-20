@@ -1114,9 +1114,9 @@
   "version" "1.0.5"
 
 "aws-sdk@^2.1176.0":
-  "integrity" "sha512-jinSKjACYHIkkz0UlFwQXwz8HAHZIeJg5wOnZoMTKU3/WM6Vh26hZJJ6XkwDAfBmyWp3V9qFdQoSAiO8SeXKjw=="
-  "resolved" "https://registry.npmjs.org/aws-sdk/-/aws-sdk-2.1176.0.tgz"
-  "version" "2.1176.0"
+  "integrity" "sha512-ZsFuVbTp9aakAIZ7lTJspuCzSw5VRIDF0bUmSZmE2tc/X/haTu/TrMeWgwPjyLkQtdhfjChCyI71V+ADqFkjsA=="
+  "resolved" "https://registry.npmjs.org/aws-sdk/-/aws-sdk-2.1178.0.tgz"
+  "version" "2.1178.0"
   dependencies:
     "buffer" "4.9.2"
     "events" "1.1.1"
@@ -1493,9 +1493,9 @@
   "version" "1.1.1"
 
 "electron-to-chromium@^1.4.188":
-  "integrity" "sha512-MeEaiuoSFh4G+rrN+Ilm1KJr8pTTZloeLurcZ+PRcthvdK1gWThje+E6baL7/7LoNctrzCncavAG/j/vpES9jg=="
-  "resolved" "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.191.tgz"
-  "version" "1.4.191"
+  "integrity" "sha512-dQ6Zn4ll2NofGtxPXaDfY2laIa6NyCQdqXYHdwH90GJQW0LpJJib0ZU/ERtbb0XkBEmUD2eJtagbOie3pdMiPg=="
+  "resolved" "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.189.tgz"
+  "version" "1.4.189"
 
 "encodeurl@~1.0.2":
   "integrity" "sha512-TPJXq8JqFaVYm2CWmPvnP2Iyo4ZSM7/QKcSmuMLDObfpH5fi7RUGmd/rTDf+rut/saiDiQEeVTNgAmJEdAOx0w=="
