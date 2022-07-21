@@ -53,7 +53,7 @@ router.post('/send-video', upload.single("video"), (req, res) => {
 /** best performer의 id와 비디오 이름 던져줌 */
 router.get("/get-video", (_, res) => {
     const bestVideoName = bestVideos[bestPerformerNick];
-    console.log(bestVideoName);
+    console.log('video name :', bestVideoName);
     res.send({bestPerformerNick: bestPerformerNick, bestVideoName: bestVideoName});
 })
 
@@ -65,22 +65,19 @@ router.post("/delete-video", (req, res) => {
         user_nick = defaultUserNick;
     }
     const videoName = bestVideos[user_nick];
-    console.log("videoName :", videoName);
+    console.log("Delete Video Try :", videoName);
     if (videoName === undefined) {
         res.send({msg : "비디오가 이미 삭제되었거나, 기록된 적이 없습니다."});
     } else {
         const videoPath = `${bestVideosPath}/${videoName}`;
         bestVideos[user_nick] = undefined; // 이전 영상 cache 삭제
-    
+        
         fs.unlink(videoPath, (e) => { console.log(e) });
+        console.log("Video Delete Success");
+
         res.send({msg : `${videoName} 삭제 완료`});
     }
 })
 
-
-router.post("/test", (req, res) => {
-    console.log(req.body.user_nick);
-    res.send("testing");
-})
 
 module.exports = router;
