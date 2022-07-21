@@ -1,67 +1,78 @@
 import { Server } from "socket.io";
+import { handleMakeRoom, handleJoinRoom } from "./handleSocket";
+
+const rooms = {};
+
+// 해당 socket이 방을 나가는 경우
+const outRoom = (socket) => {
+  let theID = "";
+  Object.entries(rooms).forEach((room) => {
+    let nickname = "";
+    let exUserStreamID = "";
+
+    // 나머지 인원에게 나간 사람 정보 broadcast
+    const newRoomMembers = room[1].members.filter((v) => {
+      if (v.socketID === socket.id) {
+        theID = room[0];
+        nickname = v.nickName;
+        exUserStreamID = v.streamID;
+        io.to(theID).emit("out user", {
+          nickname,
+          streamID: exUserStreamID,
+        });
+      }
+
+      socket.leave(theID);
+      if (v.socketID !== socket.id) {
+        return v;
+      }
+    });
+
+    // rooms의 정보 갱신
+    room[1].members = newRoomMembers;
+  });
+
+  io.to(theID).emit("give room list", rooms);
+};
 
 module.exports = async (server) => {
   const io = new Server(server, {
     cors: {
       origin: "*",
       methods: ["GET", "POST"],
-
     }
-
   });
 
-  const rooms = {};
-
-  // 해당 socket이 방을 나가는 경우
-  const outRoom = (socket) => {
-    let theID = "";
-    Object.entries(rooms).forEach((room) => {
-      let nickname = "";
-      let exUserStreamID = "";
-
-      // 나머지 인원에게 나간 사람 정보 broadcast
-      const newRoomMembers = room[1].members.filter((v) => {
-        if (v.socketID === socket.id) {
-          theID = room[0];
-          nickname = v.nickName;
-          exUserStreamID = v.streamID;
-          io.to(theID).emit("out user", {
-            nickname,
-            streamID: exUserStreamID,
-          });
-        }
-
-        socket.leave(theID);
-        if (v.socketID !== socket.id) {
-          return v;
-        }
-      });
-
-      // rooms의 정보 갱신
-      room[1].members = newRoomMembers;
-    });
-
-    io.to(theID).emit("give room list", rooms);
-  };
-
   io.on("connection", (socket) => {
+    //방 리스트
     socket.on("get room list", () => {
       socket.emit("give room list", rooms);
     });
 
     // 방 생성
-    socket.on("make room", ({ roomName, roomID }) => {
-      rooms[roomID] = {
-        roomName,
-        count: 0,
-        readyCount: 0,
-        members: [],
-      };
+    socket.on("make room", ({ roomName, roomID, maxCnt}) => {
+      let handle = handleMakeRoom(roomName, roomID, maxCnt);
 
-      io.emit("give room list", rooms);
+      if (handle.bool) {
+        rooms[roomID] = {
+          roomName,
+          maxCnt,
+          count: 0,
+          readyCount: 0,
+          isPlay: false,
+          members: [],
+        };
+        
+        console.log(rooms[roomID])
+        io.emit("give room list", rooms);
+      } else {
+        io.to(socket.id).emit("make room fail", handle);
+      }
     });
 
     socket.on("join room", ({ roomID, streamID, nickName }) => {
+      let room = rooms[roomID];
+      let members = room.members;
       let member = {
         socketID: socket.id,
         stremID: streamID,
@@ -69,17 +80,16 @@ module.exports = async (server) => {
         status: false
       }
 
-      if (rooms[roomID]) {
-        rooms[roomID].members.push(member);
+      if (room) {
+        members.push(member);
       } else {
         // 방장은 배열에 넣어서 처음 넣어줌
-        rooms[roomID].members = [member];
+        members = [member];
       }
-      rooms[roomID].count += 1;
 
-      const otherUsers = rooms[roomID].members.filter(
-        (id) => id.socketID !== socket.id
-      );
+      room.count += 1;
+
+      const otherUsers = members.filter((id) => id.socketID !== socket.id);
 
       socket.join(roomID);
       
@@ -94,6 +104,7 @@ module.exports = async (server) => {
           nickName,
         });
       }
+      
     });
 
     socket.on("finsh", ({roomID}) => {
@@ -123,19 +134,13 @@ module.exports = async (server) => {
     socket.on("ready", ({roomID}) => {
       const room = rooms[roomID];
       const member = room.members.filter((val) => val.socketID == socket.id);
-      let status = member[0].status;
       const chief = room.members[0]
+      let status = member[0].status;
 
-      if(status) {
-        room.readyCount -= 1;
-      } else {
-        room.readyCount += 1;
-      }
-
+      room.readyCount = status ? room.readyCount - 1 : room.readyCount + 1;
       member[0].status = !status;
 
-      
-      socket.to(roomID).emit("ready", {
+      io.to(roomID).emit("ready", {
         nickName: member[0].nickName,
         status: member[0].status
       });
