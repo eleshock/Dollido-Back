@@ -53,6 +53,8 @@ module.exports = async (server) => {
     socket.on("make room", ({ roomName, roomID }) => {
       rooms[roomID] = {
         roomName,
+        count: 0,
+        readyCount: 0,
         members: [],
       };
 
@@ -60,23 +62,31 @@ module.exports = async (server) => {
     });
 
     socket.on("join room", ({ roomID, streamID, nickName }) => {
+      let member = {
+        socketID: socket.id,
+        stremID: streamID,
+        nickName: nickName,
+        status: false
+      }
+
       if (rooms[roomID]) {
-        rooms[roomID].members.push({ socketID: socket.id, streamID, nickName });
+        rooms[roomID].members.push(member);
       } else {
         // 방장은 배열에 넣어서 처음 넣어줌
-        rooms[roomID].members = [{ socketID: socket.id, streamID, nickName }];
+        rooms[roomID].members = [member];
       }
+      rooms[roomID].count += 1;
 
       const otherUsers = rooms[roomID].members.filter(
         (id) => id.socketID !== socket.id
       );
 
       socket.join(roomID);
-
+      
       if (otherUsers) {
         // 본인에게 기존 사람이 있다고 알림
         socket.emit("other users", otherUsers);
-
+        
         // 기존 사람들에게는 본인이 새로 들어간다고 알림
         socket.broadcast.to(roomID).emit("user joined", {
           socketID: socket.id,
@@ -84,6 +94,55 @@ module.exports = async (server) => {
           nickName,
         });
       }
+    });
+
+    socket.on("finsh", ({roomID}) => {
+      console.log(roomID);
+      io.to(roomID).emit("finsh");
+    });
+
+    socket.on("wait", ({roomID}) => {
+      let king = rooms[roomID].members[0].socketID;
+      let status = false;
+      
+      if (king === socket.id){
+        status = true;
+      }
+      io.to(socket.id).emit("wait", status);
+    });
+
+    socket.on("start", ({roomID}) => {
+      const room = rooms[roomID];
+      let status = false;
+      if (room.count-1 === room.readyCount) {
+        status = true;
+      }
+      io.to(roomID).emit("start", status);
+    });
+
+    socket.on("ready", ({roomID}) => {
+      const room = rooms[roomID];
+      const member = room.members.filter((val) => val.socketID == socket.id);
+      let status = member[0].status;
+      const chief = room.members[0]
+
+      if(status) {
+        room.readyCount -= 1;
+      } else {
+        room.readyCount += 1;
+      }
+
+      member[0].status = !status;
+
+      
+      socket.to(roomID).emit("ready", {
+        nickName: member[0].nickName,
+        status: member[0].status
+      });
+
+      io.to(chief.socketID).emit("chief", {
+        readyCount: room.readyCount
+      });
     });
 
     // 전송하고 싶은 offer을 target에게 재전송
@@ -108,5 +167,9 @@ module.exports = async (server) => {
     socket.on("out room", () => {
       outRoom(socket);
     });
+
+    socket.on("smile", (peerHP, room, peerID) => {
+      socket.to(room).emit("smile", peerHP, peerID);
+    })
   });
 };
