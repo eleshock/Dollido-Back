@@ -170,6 +170,11 @@ module.exports = async (server) => {
 
     socket.on("smile", (peerHP, room, peerID) => {
       socket.to(room).emit("smile", peerHP, peerID);
-    })
+    });
+
+    // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
+    socket.on("send_message", (data) => {
+      socket.to(data.room).emit("receive_message", data);
+    });
   });
 };
