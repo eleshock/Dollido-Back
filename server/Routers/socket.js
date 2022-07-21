@@ -82,11 +82,11 @@ module.exports = async (server) => {
       );
 
       socket.join(roomID);
-      
+
       if (otherUsers) {
         // 본인에게 기존 사람이 있다고 알림
         socket.emit("other users", otherUsers);
-        
+
         // 기존 사람들에게는 본인이 새로 들어간다고 알림
         socket.broadcast.to(roomID).emit("user joined", {
           socketID: socket.id,
@@ -96,15 +96,15 @@ module.exports = async (server) => {
       }
     });
 
-    socket.on("finsh", ({roomID}) => {
+    socket.on("finish", ({roomID}) => {
       console.log(roomID);
-      io.to(roomID).emit("finsh");
+      io.to(roomID).emit("finish");
     });
 
     socket.on("wait", ({roomID}) => {
       let king = rooms[roomID].members[0].socketID;
       let status = false;
-      
+
       if (king === socket.id){
         status = true;
       }
@@ -134,8 +134,8 @@ module.exports = async (server) => {
 
       member[0].status = !status;
 
-      
-      socket.to(roomID).emit("ready", {
+
+      io.to(roomID).emit("ready", {
         nickName: member[0].nickName,
         status: member[0].status
       });
@@ -170,6 +170,11 @@ module.exports = async (server) => {
 
     socket.on("smile", (peerHP, room, peerID) => {
       socket.to(room).emit("smile", peerHP, peerID);
-    })
+    });
+
+    // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
+    socket.on("send_message", (data) => {
+      socket.to(data.room).emit("receive_message", data);
+    });
   });
 };
