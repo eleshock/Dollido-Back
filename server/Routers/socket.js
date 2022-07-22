@@ -1,16 +1,15 @@
 import { Server } from "socket.io";
+import chooseBestPerformer from "./bestPerformer/chooseBestPerformer";
 
-module.exports = async (server) => {
+const rooms = {};
+const webSocket = async (server) => {
   const io = new Server(server, {
     cors: {
       origin: "*",
       methods: ["GET", "POST"],
 
     }
-
   });
-
-  const rooms = {};
 
   // 해당 socket이 방을 나가는 경우
   const outRoom = (socket) => {
@@ -55,18 +54,20 @@ module.exports = async (server) => {
         roomName,
         count: 0,
         readyCount: 0,
+        bestPerformer: null,
         members: [],
       };
 
       io.emit("give room list", rooms);
     });
 
-    socket.on("join room", ({ roomID, streamID, nickName }) => {
+    socket.on("join room", ({ roomID, streamID, nickName, initialHP }) => {
       let member = {
         socketID: socket.id,
         stremID: streamID,
         nickName: nickName,
-        status: false
+        status: false,
+        HP: initialHP,      // best performer 결정에 사용
       }
 
       if (rooms[roomID]) {
@@ -97,7 +98,8 @@ module.exports = async (server) => {
     });
 
     socket.on("finish", ({roomID}) => {
-      console.log(roomID);
+      console.log("Game Finish roomID :", roomID);
+      rooms[roomID].bestPerformer = chooseBestPerformer(rooms, roomID);
       io.to(roomID).emit("finish");
     });
 
@@ -168,8 +170,15 @@ module.exports = async (server) => {
       outRoom(socket);
     });
 
-    socket.on("smile", (peerHP, room, peerID) => {
-      socket.to(room).emit("smile", peerHP, peerID);
+    socket.on("smile", (peerHP, roomID, peerID) => {
+      // HP 기록
+      for (const member of rooms[roomID].members) {
+        if (member.nickName === peerID) {
+          member.HP = peerHP;
+          break;
+        }
+      }
+      socket.to(roomID).emit("smile", peerHP, peerID);
     });
 
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
@@ -178,3 +187,5 @@ module.exports = async (server) => {
     });
   });
 };
+
+module.exports = { webSocket, rooms };
