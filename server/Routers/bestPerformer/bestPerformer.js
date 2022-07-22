@@ -6,7 +6,7 @@ import { rooms } from "../socket";
 const destPath = 'uploads/'
 const bestVideosPath = __dirname + '/../../bestVideos';
 const uploadPath = __dirname + '/../../../' + destPath;
-const defaultUserNick = "salmonsushi";
+const defaultUserNick = "anonymous";
 
 const router = express.Router();
 const upload = multer({ dest: destPath });

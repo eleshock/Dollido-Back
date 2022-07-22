@@ -1,4 +1,4 @@
-const defaultUserNick = "salmonsushi";
+const defaultUserNick = "anonymous";
 
 /** best performer 결정
  * 정책 : 가장 HP가 낮은 사람 */
