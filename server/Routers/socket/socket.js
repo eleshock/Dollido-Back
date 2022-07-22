@@ -1,3 +1,4 @@
+import chooseBestPerformer from "../bestPerformer/chooseBestPerformer";
 import { Server } from "socket.io";
 import { 
   handleMakeRoom, 
@@ -10,9 +11,7 @@ import {
 } from "./handleSocket";
 
 const rooms = {};
-
-module.exports.rooms = rooms;
-module.exports.socketOn = (server) => {
+const socketOn = (server) => {
   const io = new Server(server, {
     cors: {
       origin: "*",
@@ -37,6 +36,7 @@ module.exports.socketOn = (server) => {
           maxCnt,
           count: 0,
           readyCount: 0,
+          bestPerformer: null,
           isPlay: false,
           members: [],
         };
@@ -48,8 +48,7 @@ module.exports.socketOn = (server) => {
     });
     
     // 방 참여
-    socket.on("join", ({ roomID, streamID, nickName }) => {
-      console.log(roomID, streamID, nickName);
+    socket.on("join room", ({ roomID, streamID, nickName, initialHP }) => {
       const room = rooms[roomID];
       const handle = handleJoinRoom(roomID, streamID, nickName, room);
       const mySocket = socket.id;
@@ -60,7 +59,8 @@ module.exports.socketOn = (server) => {
           socketID: mySocket,
           stremID: streamID,
           nickName: nickName,
-          isReady: false
+          isReady: false,
+          HP: initialHP,      // best performer 결정에 사용
         }
 
         if (room) {
@@ -94,7 +94,7 @@ module.exports.socketOn = (server) => {
       const handle = handleFinish(roomID, room);
       
       if (handle.bool) {
-        
+        room.bestPerformer = chooseBestPerformer(rooms, roomID);
         room.readyCount = 0
         room.members.forEach((info) => {
           info.isReady = false;
@@ -192,9 +192,17 @@ module.exports.socketOn = (server) => {
     });
 
     // 각 유저의 hp 전달
-    socket.on("smile", (peerHP, room, peerID) => {
-      socket.to(room).emit("smile", peerHP, peerID);
+    socket.on("smile", (peerHP, roomID, peerID) => {
+      // HP 기록
+      for (const member of rooms[roomID].members) {
+        if (member.nickName === peerID) {
+          member.HP = peerHP;
+          break;
+        }
+      }
+      socket.to(roomID).emit("smile", peerHP, peerID);
     });
+
 
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
     socket.on("send_message", (data) => {
@@ -202,3 +210,5 @@ module.exports.socketOn = (server) => {
     });
   });
 };
+
+module.exports = { socketOn, rooms };

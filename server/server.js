@@ -2,12 +2,11 @@ import http from "http";
 import cors from "cors";
 import express from "express";
 import { socketOn } from "./Routers/socket/socket";
-
 // routers import
 import apiGifs from "./Routers/gifs";
 import apiSignUp from "./Routers/member/signup";
 import apiSignIn from "./Routers/member/signin";
-import apiBestPerformer from "./Routers/bestPerformer";
+import apiBestPerformer from "./Routers/bestPerformer/bestPerformer";
 
 const port = 5000;
 const app = express();
