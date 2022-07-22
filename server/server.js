@@ -1,7 +1,8 @@
 import http from "http";
 import cors from "cors";
 import express from "express";
-import webSocket from "./Routers/socket";
+import { socketOn } from "./Routers/socket/socket";
+
 // routers import
 import apiGifs from "./Routers/gifs";
 import apiSignUp from "./Routers/member/signup";
@@ -28,5 +29,5 @@ app.use("/api/best", apiBestPerformer);
 
 
 // webSocket, https 연결
-webSocket(server);
+socketOn(server);
 server.listen(port, () => console.log("접속 완료"));
