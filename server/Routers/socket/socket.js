@@ -29,7 +29,6 @@ const socketOn = (server) => {
     // 방 생성
     socket.on("make room", ({ roomName, roomID, maxCnt}) => {
       const handle = handleMakeRoom(roomName, roomID, maxCnt);
-      console.log(roomName, roomID, maxCnt);
       if (handle.bool) {
         rooms[roomID] = {
           roomName,
@@ -57,7 +56,7 @@ const socketOn = (server) => {
         let members = room.members;
         const member = {
           socketID: mySocket,
-          stremID: streamID,
+          streamID: streamID,
           nickName: nickName,
           isReady: false,
           HP: initialHP,      // best performer 결정에 사용
@@ -76,6 +75,9 @@ const socketOn = (server) => {
 
         if (otherUsers) {
           socket.emit("other users", otherUsers);
+          console.log("socketID", mySocket);
+          console.log("streamID", streamID);
+          console.log("nickName", nickName);
           socket.broadcast.to(roomID).emit("user joined", {
             socketID: mySocket,
             streamID,
@@ -103,7 +105,7 @@ const socketOn = (server) => {
 
         io.to(roomID).emit("finish");
       } else {
-        io.to(socket.id).emit(handle);
+        io.to(socket.id).emit("finish room fail",handle);
       }
     });
 
@@ -141,7 +143,6 @@ const socketOn = (server) => {
 
     // 게임 레디
     socket.on("ready", ({roomID}) => {
-      console.log(roomID);
       const room = rooms[roomID];
       const handle = handleReady(roomID, room);
 
@@ -180,14 +181,11 @@ const socketOn = (server) => {
 
     // 창을 완전히 닫았을 경우
     socket.on("disconnect", () => {
-      console.log("hi");
-      io.to(socket.id).emit("stop");
       handleOutRoom(socket, rooms, io);
     });
     
     // 뒤로가기로 방을 나갔을 경우
     socket.on("out room", () => {
-      io.to(socket.id).emit("stop");
       handleOutRoom(socket, rooms, io);
     });
 
@@ -202,7 +200,6 @@ const socketOn = (server) => {
       }
       socket.to(roomID).emit("smile", peerHP, peerID);
     });
-
 
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
     socket.on("send_message", (data) => {

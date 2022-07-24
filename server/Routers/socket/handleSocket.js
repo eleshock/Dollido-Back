@@ -3,7 +3,7 @@ const handleMakeRoom = (roomName, roomID, maxCnt) => {
     let msg = "";
     let bool = false;
 
-    if (roomName === "" || roomName === undefined || roomID === "" || roomID === undefined) {
+    if (roomName === "" || !roomName || roomID === "" || !roomID ) {
         msg = "방 이름을 작성해 주세요";
     } else if (maxCnt <= 0) {
         msg = "방 인원을 최소 1명 이상이여야 됩니다";
@@ -22,11 +22,11 @@ const handleJoinRoom = (roomID, streamID, nickName, room) => {
     let msg = "";
     let bool = false;
 
-    if (!room || roomID === "" || roomID === undefined) {
+    if (!room || roomID === "" || !roomID) {
         msg = "해당 방이 없습니다";
-    } else if (streamID === "" && streamID === undefined) {
+    } else if (streamID === "" || !streamID) {
         msg = "영상을 허용해주세요";
-    } else if (nickName === "" || nickName === undefined) {
+    } else if (nickName === "" || !nickName) {
         msg = "로그인 후 이용가능합니다";
     } else if (room.count >= 4) {
         msg = "현재 방에 인원이 꽉 찼습니다";
@@ -45,7 +45,7 @@ const handleFinish = (roomID, room) => {
     let msg = "";
     let bool = false;
     
-    if (!room || roomID === "" || roomID === undefined) {
+    if (!room || roomID === "" || !roomID) {
         msg = "해당 방이 없습니다";
     } else {
         msg = "성공";
@@ -59,7 +59,7 @@ const handleWait = (roomID, room) => {
     let msg = "";
     let bool = false;
 
-    if (!room || roomID === "" || roomID === undefined) {
+    if (!room || roomID === "" || !roomID) {
         msg = "해당 방이 없습니다";
     } else if (room.members.length === 0) {
         msg = "방에 아무도 없습니다";
@@ -75,7 +75,7 @@ const handleStart = (roomID, room) => {
     let msg = "";
     let bool = false;
 
-    if (!room || roomID === "" || roomID === undefined) {
+    if (!room || roomID === "" || !roomID) {
         msg = "해당 방이 없습니다";
     } else if (room.count == undefined || room.count == null) {
         msg = "방에 아무도 없습니다";
@@ -93,7 +93,7 @@ const handleReady = (roomID, room) => {
     let msg = "";
     let bool = false;
     
-    if (!room || roomID === "" || roomID === undefined) {
+    if (!room || roomID === "" || !roomID) {
         msg = "해당 방이 없습니다";
     } else if (room.count == undefined || room.count == null) {
         msg = "방에 아무도 없습니다";
@@ -132,7 +132,6 @@ const handleOutRoom = (socket, rooms, io) => {
           return v;
         }
       });
-  
       // rooms의 정보 갱신
       if (bool) {
           room[1].count -= 1
