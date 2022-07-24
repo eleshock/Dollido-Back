@@ -125,18 +125,34 @@ const socketOn = (server) => {
       }
     });
 
+
+    const randomNumberProducer =() => {
+      let randomNumber = [];
+      for(var i = 0; i < 22; i++) {
+          let myRandomNumber = Math.floor(Math.random() * gifCount);
+          if(!randomNumber.includes(myRandomNumber)) {
+              randomNumber.push(myRandomNumber);
+          } else {
+              i--;
+          }
+      };
+      return randomNumber
+    }
+
     // 게임 시작
     socket.on("start", ({roomID}) => {
+      let randomList = [];
       const room = rooms[roomID];
       const mySocket = socket.id;
       const handle = handleStart(roomID, room);
       let status = false;
+      randomList = randomNumberProducer();
 
       if (handle.bool) {
         if (room.members[0].socketID == mySocket && room.count-1 === room.readyCount) {
           status = true;
         }
-        io.to(roomID).emit("start", status);
+        io.to(roomID).emit("start", status, randomList);
       } else {
         io.to(socket.id).emit("start room fail", handle);
       }
