@@ -109,6 +109,7 @@ const handleReady = (roomID, room) => {
 
 const handleOutRoom = (socket, rooms, io) => {
     let theID = "";
+    let chief = "";
     Object.entries(rooms).forEach((room) => {
       let nickname = "";
       let exUserStreamID = "";
@@ -119,9 +120,10 @@ const handleOutRoom = (socket, rooms, io) => {
       const newRoomMembers = room[1].members.filter((v) => {
         if (v.socketID === socket.id) {
             bool = true;
-            readyBool = true;
+            readyBool = v.isReady;
             theID = room[0];
             nickname = v.nickName;
+            chief = v.streamID;
             exUserStreamID = v.streamID;
             io.to(theID).emit("out user", {
                 nickname,
@@ -136,12 +138,14 @@ const handleOutRoom = (socket, rooms, io) => {
       });
       // rooms의 정보 갱신
       if (bool) {
-        if (readyBool) room[1].readyCount -= 1;
+        if (readyBool) {
+            room[1].readyCount -= 1
+        };
         room[1].count -= 1
       }
       room[1].members = newRoomMembers;
     });
-  
+    io.to(theID).emit("chief", chief);
     io.to(theID).emit("give room list", rooms);
 }
 
