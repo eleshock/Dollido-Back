@@ -1,7 +1,7 @@
 import chooseBestPerformer from "../bestPerformer/chooseBestPerformer";
 import { Server } from "socket.io";
-import { 
-  handleMakeRoom, 
+import {
+  handleMakeRoom,
   handleJoinRoom,
   handleFinish,
   handleWait,
@@ -39,19 +39,19 @@ const socketOn = (server) => {
           isPlay: false,
           members: [],
         };
-        
+
         io.emit("give room list", rooms);
       } else {
         io.to(socket.id).emit("make room fail", handle);
       }
     });
-    
+
     // 방 참여
     socket.on("join room", ({ roomID, streamID, nickName, initialHP }) => {
       const room = rooms[roomID];
       const handle = handleJoinRoom(roomID, streamID, nickName, room);
       const mySocket = socket.id;
-      
+
       if (handle.bool) {
         let members = room.members;
         const member = {
@@ -67,9 +67,9 @@ const socketOn = (server) => {
         } else {
           members = [member];
         }
-        
+
         const otherUsers = members.filter((info) => info.socketID !== mySocket);
-        
+
         socket.join(roomID);
         room.count += 1;
 
@@ -94,7 +94,7 @@ const socketOn = (server) => {
     socket.on("finish", ({roomID}) => {
       const room = rooms[roomID];
       const handle = handleFinish(roomID, room);
-      
+
       if (handle.bool) {
         room.bestPerformer = chooseBestPerformer(rooms, roomID);
         room.readyCount = 0
@@ -116,9 +116,10 @@ const socketOn = (server) => {
 
       if (handle.bool) {
         const chief = room.members[0].socketID;
+        const chiefStream = room.members[0].streamID;
         const status = chief === socket.id ? true : false;
-  
-        io.to(socket.id).emit("wait", { status, roomID });
+
+        io.to(socket.id).emit("wait", { status, roomID, chiefStream });
       } else {
         io.to(socket.id).emit("wait room fail", handle);
       }
@@ -148,19 +149,20 @@ const socketOn = (server) => {
 
       if (handle.bool) {
         const member = room.members.filter((info) => info.socketID == socket.id);
-  
+
         if (member) {
           const chief = room.members[0]
           let isReady = member[0].isReady;
-    
+
           room.readyCount = isReady ? room.readyCount - 1 : room.readyCount + 1;
           member[0].isReady = !isReady;
 
           console.log(room);
-    
+
           io.to(roomID).emit("ready", {
             nickName: member[0].nickName,
-            status: member[0].status
+            status: member[0].status,
+            stream: member[0].streamID,
           });
         }
       }
@@ -183,14 +185,14 @@ const socketOn = (server) => {
     socket.on("disconnect", () => {
       handleOutRoom(socket, rooms, io);
     });
-    
+
     // 뒤로가기로 방을 나갔을 경우
     socket.on("out room", () => {
       handleOutRoom(socket, rooms, io);
     });
 
     // 각 유저의 hp 전달
-    socket.on("smile", (peerHP, roomID, peerID) => {
+    socket.on("smile", (peerHP, roomID, peerID, peerStreamID) => {
       // HP 기록
       for (const member of rooms[roomID].members) {
         if (member.nickName === peerID) {
@@ -198,7 +200,7 @@ const socketOn = (server) => {
           break;
         }
       }
-      socket.to(roomID).emit("smile", peerHP, peerID);
+      socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID);
     });
 
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
