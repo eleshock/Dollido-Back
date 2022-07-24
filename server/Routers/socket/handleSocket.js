@@ -113,11 +113,13 @@ const handleOutRoom = (socket, rooms, io) => {
       let nickname = "";
       let exUserStreamID = "";
       let bool = false;
+      let readyBool = false;
   
       // 나머지 인원에게 나간 사람 정보 broadcast
       const newRoomMembers = room[1].members.filter((v) => {
         if (v.socketID === socket.id) {
             bool = true;
+            readyBool = true;
             theID = room[0];
             nickname = v.nickName;
             exUserStreamID = v.streamID;
@@ -134,7 +136,8 @@ const handleOutRoom = (socket, rooms, io) => {
       });
       // rooms의 정보 갱신
       if (bool) {
-          room[1].count -= 1
+        if (readyBool) room[1].readyCount -= 1;
+        room[1].count -= 1
       }
       room[1].members = newRoomMembers;
     });

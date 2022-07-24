@@ -38,6 +38,7 @@ const socketOn = (server) => {
           bestPerformer: null,
           isPlay: false,
           members: [],
+          readyList: [],
         };
         
         io.emit("give room list", rooms);
@@ -152,15 +153,21 @@ const socketOn = (server) => {
         if (member) {
           const chief = room.members[0]
           let isReady = member[0].isReady;
-    
-          room.readyCount = isReady ? room.readyCount - 1 : room.readyCount + 1;
+          let temp = room.readyList;
+
+          if (isReady) {
+            room.readyCount -= 1;
+            room.readyList = room.readyList.filter((info) => info[0] !== socket.id);
+          } else {
+            room.readyCount += 1;
+            room.readyList.push([member[0].socketID, member[0].streamID]);            
+          }
           member[0].isReady = !isReady;
 
           console.log(room);
     
           io.to(roomID).emit("ready", {
-            nickName: member[0].nickName,
-            status: member[0].status
+            readyList: temp
           });
         }
       }
