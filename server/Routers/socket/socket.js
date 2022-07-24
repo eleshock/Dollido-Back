@@ -110,6 +110,10 @@ const socketOn = (server) => {
       }
     });
 
+    socket.on("restart", ({ roomID }) => {
+      io.to(roomID).emit("restart", roomID);
+    })
+
     // 방장 체크
     socket.on("wait", ({roomID}) => {
       const room = rooms[roomID];
