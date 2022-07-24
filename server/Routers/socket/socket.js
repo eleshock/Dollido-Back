@@ -111,7 +111,7 @@ const socketOn = (server) => {
     });
 
     socket.on("restart", ({ roomID }) => {
-      io.to(roomID).emit("restart", roomID);
+      io.to(roomID).emit("restart");
     })
 
     // 방장 체크
