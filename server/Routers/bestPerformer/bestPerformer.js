@@ -6,7 +6,6 @@ import { rooms } from "../socket/socket";
 const destPath = 'uploads/'
 const bestVideosPath = __dirname + '/../../bestVideos';
 const uploadPath = __dirname + '/../../../' + destPath;
-const defaultUserNick = "anonymous";
 
 const router = express.Router();
 const upload = multer({ dest: destPath });
@@ -67,9 +66,6 @@ router.post("/get-video", (req, res) => {
 /** 유저의 파일 삭제 */
 router.post("/delete-video", (req, res) => {
     let user_nick = req.body.user_nick;
-    if (user_nick === null) {
-        user_nick = defaultUserNick;
-    }
 
     const videoName = bestVideos[user_nick];
     if (videoName === undefined) {
