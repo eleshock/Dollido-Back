@@ -109,7 +109,6 @@ const handleReady = (roomID, room) => {
 
 const handleOutRoom = (socket, rooms, io) => {
     let theID = "";
-    let chief = "";
     Object.entries(rooms).forEach((room) => {
       let nickname = "";
       let exUserStreamID = "";
@@ -123,11 +122,9 @@ const handleOutRoom = (socket, rooms, io) => {
             readyBool = v.isReady;
             theID = room[0];
             nickname = v.nickName;
-            chief = v.streamID;
             exUserStreamID = v.streamID;
             io.to(theID).emit("out user", {
-                nickname,
-                streamID: exUserStreamID,
+                streamID: exUserStreamID
             });
         }
 
@@ -145,7 +142,10 @@ const handleOutRoom = (socket, rooms, io) => {
       }
       room[1].members = newRoomMembers;
     });
-    io.to(theID).emit("chief", chief);
+    if (rooms[theID] && rooms[theID].count > 0) {
+        const chief = rooms[theID].members[0].streamID;
+        io.to(theID).emit("chief", {chiefStream: chief});
+    }
     io.to(theID).emit("give room list", rooms);
 }
 

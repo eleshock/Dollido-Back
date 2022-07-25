@@ -98,9 +98,9 @@ const socketOn = (server) => {
       if (handle.bool) {
         room.bestPerformer = chooseBestPerformer(rooms, roomID);
         room.readyCount = 0
+        room.isPlay = false;
         room.members.forEach((info) => {
           info.isReady = false;
-          info.isPlay = false;
         });
 
         io.to(roomID).emit("finish");
@@ -155,6 +155,7 @@ const socketOn = (server) => {
       if (handle.bool) {
         if (room.members[0].socketID == mySocket && room.count-1 === room.readyCount) {
           status = true;
+          room.isPlay = true;
         }
         io.to(roomID).emit("start", status, randomList);
       } else {
