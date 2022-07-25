@@ -119,13 +119,12 @@ const handleOutRoom = (socket, rooms, io) => {
       const newRoomMembers = room[1].members.filter((v) => {
         if (v.socketID === socket.id) {
             bool = true;
-            readyBool = true;
+            readyBool = v.isReady;
             theID = room[0];
             nickname = v.nickName;
             exUserStreamID = v.streamID;
             io.to(theID).emit("out user", {
-                nickname,
-                streamID: exUserStreamID,
+                streamID: exUserStreamID
             });
         }
 
@@ -136,12 +135,17 @@ const handleOutRoom = (socket, rooms, io) => {
       });
       // rooms의 정보 갱신
       if (bool) {
-        if (readyBool) room[1].readyCount -= 1;
+        if (readyBool) {
+            room[1].readyCount -= 1
+        };
         room[1].count -= 1
       }
       room[1].members = newRoomMembers;
     });
-  
+    if (rooms[theID] && rooms[theID].count > 0) {
+        const chief = rooms[theID].members[0].streamID;
+        io.to(theID).emit("chief", {chiefStream: chief});
+    }
     io.to(theID).emit("give room list", rooms);
 }
 

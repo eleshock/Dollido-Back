@@ -25,10 +25,6 @@ const unlinkFile = util.promisify(fs.unlink)
 const { uploadFile, getFileStream } = require('../s3')
 
 
-
-global.sendGIF = [];
-global.gifCount = 0;
-
 router.get('/imagesk/:key', (req, res) => {
     const key = req.params.key
     const readStream = getFileStream(key)
@@ -38,6 +34,7 @@ router.get('/imagesk/:key', (req, res) => {
 router.post('/images', upload.single('image'), async (req, res) => {
     try{
         const file = req.file
+        console.log(file)
         const result =  await uploadFile(file)
         await unlinkFile(file.path)
         res.send({imagePath: `api/gifs/images/${result.Key}`})
@@ -48,10 +45,15 @@ router.post('/images', upload.single('image'), async (req, res) => {
 })
 
 router.get('/list', async(req,res)=> {
+    let gifCount = 0;
+
     try{
         let r = await s3.listObjectsV2({Bucket:bucketName}).promise()
         let x = r.Contents.map(item=>item.Key);
         gifCount = x.length;
+        console.log("여기서" + gifCount)
+        global.gifCount = gifCount;
+
         res.send(x)
     } catch (e) {
         console.error(e);
@@ -59,21 +61,5 @@ router.get('/list', async(req,res)=> {
     return gifCount;
   })
 
-router.get("/roomGIF", (_, res) => {
-    if (sendGIF.length > 0) {
-        sendGIF = [];
-    };
-
-    for(var i = 0; i < 22; i++) {
-        const myRandomNumber = Math.floor(Math.random() * gifCount);
-        if(!sendGIF.includes(myRandomNumber)) {
-            sendGIF.push(myRandomNumber);
-        } else {
-            i--;
-        }
-    };
-
-    res.send({sendGIF});
-});
 
 module.exports = router;

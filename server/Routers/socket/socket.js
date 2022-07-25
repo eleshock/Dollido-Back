@@ -38,7 +38,6 @@ const socketOn = (server) => {
           bestPerformer: null,
           isPlay: false,
           members: [],
-          readyList: [],
         };
 
         io.emit("give room list", rooms);
@@ -92,23 +91,30 @@ const socketOn = (server) => {
     });
 
     // 게임 끝
-    socket.on("finish", ({roomID}) => {
+    socket.on("finish", ({roomID, HP}) => {
       const room = rooms[roomID];
       const handle = handleFinish(roomID, room);
-
+      const hpList = [];
       if (handle.bool) {
         room.bestPerformer = chooseBestPerformer(rooms, roomID);
         room.readyCount = 0
+        room.isPlay = false;
         room.members.forEach((info) => {
           info.isReady = false;
-          info.isPlay = false;
         });
-
-        io.to(roomID).emit("finish");
+        for (const member of rooms[roomID].members) {
+            hpList.push([member.streamID, member.HP])
+          }
+        console.log(hpList);
+        io.to(roomID).emit("finish", (hpList));
       } else {
         io.to(socket.id).emit("finish room fail",handle);
       }
     });
+
+    socket.on("restart", ({ roomID }) => {
+      io.to(roomID).emit("restart");
+    })
 
     // 방장 체크
     socket.on("wait", ({roomID}) => {
@@ -126,18 +132,35 @@ const socketOn = (server) => {
       }
     });
 
+
+    const randomNumberProducer =() => {
+      let randomNumber = [];
+      for(var i = 0; i < 22; i++) {
+          let myRandomNumber = Math.floor(Math.random() * gifCount);
+          if(!randomNumber.includes(myRandomNumber)) {
+              randomNumber.push(myRandomNumber);
+          } else {
+              i--;
+          }
+      };
+      return randomNumber
+    }
+
     // 게임 시작
     socket.on("start", ({roomID}) => {
+      let randomList = [];
       const room = rooms[roomID];
       const mySocket = socket.id;
       const handle = handleStart(roomID, room);
       let status = false;
+      randomList = randomNumberProducer();
 
       if (handle.bool) {
         if (room.members[0].socketID == mySocket && room.count-1 === room.readyCount) {
           status = true;
+          room.isPlay = true;
         }
-        io.to(roomID).emit("start", status);
+        io.to(roomID).emit("start", status, randomList);
       } else {
         io.to(socket.id).emit("start room fail", handle);
       }
@@ -151,24 +174,16 @@ const socketOn = (server) => {
       if (handle.bool) {
         const member = room.members.filter((info) => info.socketID == socket.id);
 
-        if (member) {
-          const chief = room.members[0]
+        if (member[0]) {
+          const readyCount = room.readyCount;
           let isReady = member[0].isReady;
-          let temp = room.readyList;
 
-          if (isReady) {
-            room.readyCount -= 1;
-            room.readyList = room.readyList.filter((info) => info[0] !== socket.id);
-          } else {
-            room.readyCount += 1;
-            room.readyList.push([member[0].socketID, member[0].streamID]);            
-          }
+          room.readyCount = isReady ? readyCount - 1 : readyCount + 1;
           member[0].isReady = !isReady;
 
-          console.log(room);
-
           io.to(roomID).emit("ready", {
-            readyList: temp
+            streamID: member[0].streamID,
+            isReady: member[0].isReady
           });
         }
       }
@@ -201,7 +216,7 @@ const socketOn = (server) => {
     socket.on("smile", (peerHP, roomID, peerID, peerStreamID) => {
       // HP 기록
       for (const member of rooms[roomID].members) {
-        if (member.nickName === peerID) {
+        if (member.streamID === peerStreamID) {
           member.HP = peerHP;
           break;
         }
