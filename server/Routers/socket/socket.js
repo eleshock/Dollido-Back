@@ -91,10 +91,10 @@ const socketOn = (server) => {
     });
 
     // 게임 끝
-    socket.on("finish", ({roomID}) => {
+    socket.on("finish", ({roomID, HP}) => {
       const room = rooms[roomID];
       const handle = handleFinish(roomID, room);
-
+      const hpList = [];
       if (handle.bool) {
         room.bestPerformer = chooseBestPerformer(rooms, roomID);
         room.readyCount = 0
@@ -102,8 +102,11 @@ const socketOn = (server) => {
         room.members.forEach((info) => {
           info.isReady = false;
         });
-
-        io.to(roomID).emit("finish");
+        for (const member of rooms[roomID].members) {
+            hpList.push([member.streamID, member.HP])
+          }
+        console.log(hpList);
+        io.to(roomID).emit("finish", (hpList));
       } else {
         io.to(socket.id).emit("finish room fail",handle);
       }
@@ -175,7 +178,7 @@ const socketOn = (server) => {
           const readyCount = room.readyCount;
           let isReady = member[0].isReady;
 
-          room.readyCount = isReady ? readyCount - 1 : readyCount + 1;  
+          room.readyCount = isReady ? readyCount - 1 : readyCount + 1;
           member[0].isReady = !isReady;
 
           io.to(roomID).emit("ready", {
@@ -213,7 +216,7 @@ const socketOn = (server) => {
     socket.on("smile", (peerHP, roomID, peerID, peerStreamID) => {
       // HP 기록
       for (const member of rooms[roomID].members) {
-        if (member.nickName === peerID) {
+        if (member.streamID === peerStreamID) {
           member.HP = peerHP;
           break;
         }
