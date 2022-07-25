@@ -34,6 +34,7 @@ router.get('/imagesk/:key', (req, res) => {
 router.post('/images', upload.single('image'), async (req, res) => {
     try{
         const file = req.file
+        console.log(file)
         const result =  await uploadFile(file)
         await unlinkFile(file.path)
         res.send({imagePath: `api/gifs/images/${result.Key}`})
