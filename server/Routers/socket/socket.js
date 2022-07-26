@@ -189,6 +189,10 @@ const socketOn = (server) => {
       }
     });
 
+    socket.on("reverse", ({ roomID }) => {
+      io.to(roomID).emit("reverse");
+    })
+
     // 전송하고 싶은 offer을 target에게 재전송
     socket.on("offer", (payload) => {
       io.to(payload.target).emit("offer", payload);
