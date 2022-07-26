@@ -32,12 +32,15 @@ router.post("/", async (req, res) => {
         try {
             let result = await queryGet(memberQuery.findBySalt, user_id);
             let args = [user_id, (await encryption(user_pw, 1, result[0].salt)).password];
+            // console.log(args);
             let user = await queryGet(memberQuery.login, args);
+            // console.log(user[0]);
             let jwtToken = await jwt.sign(user[0]);
-            let member = {user_id: user[0].user_id, user_nick: user[0].nick_name, tokenInfo: jwtToken}; 
+            let member = {user_id: user[0].member_id, user_nick: user[0].nick_name, tokenInfo: jwtToken}; 
             res.status(201).send({bool: true, msg: "로그인 성공", member: member});
             return;
-        } catch {
+        } catch(e) {
+            console.log(e)
             res.status(200).send({bool: false, msg: "로그인 실패"});
             return;
         }

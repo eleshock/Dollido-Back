@@ -1,6 +1,10 @@
 import authUtil from "./member/auth";
 import { Router } from "express";
 import fs from "fs";
+import queryGet from "../modules/db_connect";
+import gifsQuery from "../query/gifs";
+import inventoryQuery from "../query/inventory";
+
 const router = Router();
 const multer  = require('multer')
 const upload = multer({ dest: 'uploads/' })
@@ -31,15 +35,39 @@ router.get('/imagesk/:key', (req, res) => {
     readStream.pipe(res)
 })
 
-router.post('/images', upload.single('image'), async (req, res) => {
+router.post('/images', upload.single('image'), authUtil, async (req, res) => {
     try{
-        const file = req.file
-        console.log(file)
-        const result =  await uploadFile(file)
-        await unlinkFile(file.path)
-        res.send({imagePath: `api/gifs/images/${result.Key}`})
-    } catch (e) {
+        const file = req.file;
+        const result =  await uploadFile(file);
+        const member_id = req.idx
+        let img_id = 0;
+        let inventory_id = 0;
+        const args = [member_id, 0, file.originalname, result.key];
 
+        await unlinkFile(file.path);
+        await queryGet(gifsQuery.insertGif, args);
+        await queryGet(gifsQuery.findByImageId, result.key)
+            .then((info) => {
+                img_id = info[0].image_id;
+                console.log(info);
+            });
+        
+        await queryGet(inventoryQuery.findById, [member_id])
+        .then((info) => {
+            console.log(info[0])
+            if (info[0] != undefined) {
+                inventory_id = info[0].inventory_id;
+            }
+        })
+
+        if (inventory_id){
+            await queryGet(inventoryQuery.updateInventory, [img_id, req.idx]);
+        } else {
+            await queryGet(inventoryQuery.insertInventory, [req.idx, img_id]);
+        }
+        
+        res.send({imagePath: `api/gifs/images/${result.Key}`});
+    } catch (e) {
         console.error(e);
     }
 })
