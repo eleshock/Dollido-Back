@@ -235,28 +235,12 @@ const socketOn = (server) => {
       socket.to(data.room).emit("receive_message", data);
     });
 
-    socket.on("my_weapon", async (roomID, myID, streamID) => {
+    socket.on("my_weapon", async (roomID, myGIF) => {
       try {
         let randomList = [];
-        console.log(roomID, streamID, myID);
         randomList = await randomNumberProducer();
-        let imgId = 0;
-        let imageServer = "";
-        await queryGet(inventoryQuery.findImageById, [myID])
-          .then((info) => {
-            if(info[0]) {
-              imgId = info[0].image_id;
-            }
-          });
-        console.log(imgId);
-        await queryGet(gifsQuery.findImageById, [imgId])
-          .then((info) => {
-            if(info[0]) {
-              imageServer = info[0].image_server;
-            }
-          })
-          console.log(imageServer);
-        io.to(roomID).emit("my_weapon", {streamID, randomList, imageServer});
+
+        io.to(roomID).emit("my_weapon", {randomList, myGIF});
       } catch(e) {
         console.log(e)
       }

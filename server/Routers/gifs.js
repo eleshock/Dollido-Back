@@ -29,16 +29,18 @@ const unlinkFile = util.promisify(fs.unlink)
 const { uploadFile, getFileStream } = require('../s3')
 
 
-router.get('/imagesk/:key', (req, res) => {
+router.get('/images/:key', (req, res) => {
     const key = req.params.key
     const readStream = getFileStream(key)
     readStream.pipe(res)
 })
 
-router.post('/images', upload.single('image'), authUtil, async (req, res) => {
+router.post('/images', upload.single('image'), async (req, res) => {
     try{
         const file = req.file;
+        console.log(file);
         const result =  await uploadFile(file);
+        console.log(result);
         const member_id = req.idx
         let img_id = 0;
         let inventory_id = 0;
@@ -51,7 +53,7 @@ router.post('/images', upload.single('image'), authUtil, async (req, res) => {
                 img_id = info[0].image_id;
                 console.log(info);
             });
-        
+
         await queryGet(inventoryQuery.findById, [member_id])
         .then((info) => {
             console.log(info[0])
@@ -65,7 +67,7 @@ router.post('/images', upload.single('image'), authUtil, async (req, res) => {
         } else {
             await queryGet(inventoryQuery.insertInventory, [req.idx, img_id]);
         }
-        
+
         res.send({imagePath: `api/gifs/images/${result.Key}`});
     } catch (e) {
         console.error(e);
