@@ -9,9 +9,6 @@ import {
   handleReady,
   handleOutRoom
 } from "./handleSocket";
-import queryGet from "../../modules/db_connect";
-import gifsQuery from "../../query/gifs";
-import inventoryQuery from "../../query/inventory";
 
 const rooms = {};
 const socketOn = (server) => {
@@ -107,8 +104,13 @@ const socketOn = (server) => {
         });
         for (const member of rooms[roomID].members) {
             hpList.push([member.streamID, member.HP])
-          }
-        // console.log(hpList);
+        }
+
+        const chief = room.members[0].socketID;
+        const chiefStream = room.members[0].streamID;
+        const status = chief === socket.id ? true : false;
+
+        io.to(socket.id).emit("wait", { status, roomID, chiefStream });
         io.to(roomID).emit("finish", (hpList));
       } else {
         io.to(socket.id).emit("finish room fail",handle);
@@ -235,27 +237,11 @@ const socketOn = (server) => {
       socket.to(data.room).emit("receive_message", data);
     });
 
-    socket.on("my_weapon", async (roomID, myID, streamID) => {
+    socket.on("my_weapon", async (roomID, imageServer, streamID) => {
       try {
         let randomList = [];
         console.log(roomID, streamID, myID);
         randomList = await randomNumberProducer();
-        let imgId = 0;
-        let imageServer = "";
-        await queryGet(inventoryQuery.findImageById, [myID])
-          .then((info) => {
-            if(info[0]) {
-              imgId = info[0].image_id;
-            }
-          });
-        console.log(imgId);
-        await queryGet(gifsQuery.findImageById, [imgId])
-          .then((info) => {
-            if(info[0]) {
-              imageServer = info[0].image_server;
-            }
-          })
-          console.log(imageServer);
         io.to(roomID).emit("my_weapon", {streamID, randomList, imageServer});
       } catch(e) {
         console.log(e)

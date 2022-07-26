@@ -66,7 +66,7 @@ router.post('/images', upload.single('image'), authUtil, async (req, res) => {
             await queryGet(inventoryQuery.insertInventory, [req.idx, img_id]);
         }
         
-        res.send({imagePath: `api/gifs/images/${result.Key}`});
+        res.send({imagePath: result.key});
     } catch (e) {
         console.error(e);
     }
