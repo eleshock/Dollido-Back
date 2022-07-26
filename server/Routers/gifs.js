@@ -50,8 +50,10 @@ router.post('/images', upload.single('image'), async (req, res) => {
         await queryGet(gifsQuery.insertGif, args);
         await queryGet(gifsQuery.findImageIdByImageServer, result.key)
             .then((info) => {
-                img_id = info[0].image_id;
-                console.log(info);
+                if (info[0] != undefined) {
+                    img_id = info[0].image_id;
+                    console.log(info);
+                }
             });
 
         await queryGet(inventoryQuery.findById, [member_id])
@@ -68,7 +70,7 @@ router.post('/images', upload.single('image'), async (req, res) => {
             await queryGet(inventoryQuery.insertInventory, [req.idx, img_id]);
         }
 
-        res.send({imagePath: `api/gifs/images/${result.Key}`});
+        res.send({imagePath: result.key});
     } catch (e) {
         console.error(e);
     }

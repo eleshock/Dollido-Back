@@ -9,9 +9,6 @@ import {
   handleReady,
   handleOutRoom
 } from "./handleSocket";
-import queryGet from "../../modules/db_connect";
-import gifsQuery from "../../query/gifs";
-import inventoryQuery from "../../query/inventory";
 
 const rooms = {};
 const socketOn = (server) => {
@@ -107,8 +104,13 @@ const socketOn = (server) => {
         });
         for (const member of rooms[roomID].members) {
             hpList.push([member.streamID, member.HP])
-          }
-        // console.log(hpList);
+        }
+
+        const chief = room.members[0].socketID;
+        const chiefStream = room.members[0].streamID;
+        const status = chief === socket.id ? true : false;
+
+        io.to(socket.id).emit("wait", { status, roomID, chiefStream });
         io.to(roomID).emit("finish", (hpList));
       } else {
         io.to(socket.id).emit("finish room fail",handle);
