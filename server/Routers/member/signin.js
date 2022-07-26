@@ -59,8 +59,8 @@ router.post("/", async (req, res) => {
             let jwtToken = await jwt.sign(user[0]);
             let imageServer = await myGif(user[0].member_id);
             console.log(imageServer)
-            let member = {user_id: user[0].member_id, user_nick: user[0].nick_name, user_gif: imageServer, tokenInfo: jwtToken}; 
-            res.status(201).send({bool: true, msg: "로그인 성공", member: member});
+            let member = {user_id: user[0].member_id, user_nick: user[0].nick_name, tokenInfo: jwtToken}; 
+            res.status(201).send({bool: true, msg: "로그인 성공", member: member, user_gif: imageServer});
             return;
         } catch(e) {
             res.status(200).send({bool: false, msg: "로그인 실패"});

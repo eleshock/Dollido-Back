@@ -43,7 +43,7 @@ router.post('/images', upload.single('image'), authUtil, async (req, res) => {
         let img_id = 0;
         let inventory_id = 0;
         const args = [member_id, 0, file.originalname, result.key];
-
+        console.log(member_id);
         await unlinkFile(file.path);
         await queryGet(gifsQuery.insertGif, args);
         await queryGet(gifsQuery.findImageIdByImageServer, result.key)
