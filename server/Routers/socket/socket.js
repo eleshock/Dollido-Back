@@ -1,4 +1,5 @@
 import chooseBestPerformer from "../bestPerformer/chooseBestPerformer";
+import { chooseReverseUser } from "../../modules/reverseItem";
 import { Server } from "socket.io";
 import {
   handleMakeRoom,
@@ -159,6 +160,8 @@ const socketOn = (server) => {
         if (room.members[0].socketID == mySocket && room.count-1 === room.readyCount) {
           status = true;
           room.isPlay = true;
+          setTimeout(() => io.to(chooseReverseUser(rooms, roomID)).emit("send-reverse"), 30000);
+          setTimeout(() => io.to(chooseReverseUser(rooms, roomID)).emit("send-reverse"), 60000);
         }
         io.to(roomID).emit("start", status, randomList);
       } else {
