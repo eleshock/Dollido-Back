@@ -154,6 +154,9 @@ const socketOn = (server) => {
       const handle = handleStart(roomID, room);
       let status = false;
       randomList = randomNumberProducer();
+      for (const member of rooms[roomID].members) {
+          member.HP = 100;
+      }
 
       if (handle.bool) {
         if (room.members[0].socketID == mySocket && room.count-1 === room.readyCount) {
@@ -227,6 +230,13 @@ const socketOn = (server) => {
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
     socket.on("send_message", (data) => {
       socket.to(data.room).emit("receive_message", data);
+    });
+
+    socket.on("my_weapon", (roomID, myID, streamID) => {
+      let randomList = [];
+      console.log(roomID, streamID, myID);
+      randomList = randomNumberProducer();
+      io.to(roomID).emit("my_weapon", streamID, randomList);
     });
   });
 };
