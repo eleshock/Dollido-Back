@@ -2,6 +2,9 @@
 const chooseReverseUser = (rooms, roomID) => {
     let untilMinHP = 10**6;
     let choosenUser = "anonymous";
+    if (!rooms[roomID]){
+        return ;
+    }
     for (const member of rooms[roomID].members) {
         if (member.HP < untilMinHP) {
             untilMinHP = member.HP;
