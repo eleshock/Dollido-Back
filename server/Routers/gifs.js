@@ -26,16 +26,20 @@ let x;
 s3.listObjectsV2({Bucket:bucketName}).promise().then((r) => {
     x = r.Contents.map(item=>item.Key);
     gifCount = x.length;
-    console.log("여기서" + gifCount)
     global.gifCount = gifCount;
-});
 
-router.get('/list-update', async(req,res)=> {
-    r = await s3.listObjectsV2({Bucket:bucketName}).promise();
-    x = r.Contents.map(item=>item.Key);
-    gifCount = x.length;
     console.log("여기서" + gifCount)
-    global.gifCount = gifCount;
+
+    router.get('/list-update', async(req,res)=> {
+        s3.listObjectsV2({Bucket:bucketName}).promise().then((rr) => {
+        x = rr.Contents.map(item=>item.Key);
+        gifCount = x.length;
+        global.gifCount = gifCount;
+
+        console.log("여기서" + gifCount)
+        res.send(x);
+        });
+    });
 });
 
 const util = require('util')
