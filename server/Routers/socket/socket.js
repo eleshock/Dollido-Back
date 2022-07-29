@@ -1,4 +1,5 @@
 import chooseBestPerformer from "../bestPerformer/chooseBestPerformer";
+import { chooseReverseUser } from "../../modules/reverseItem";
 import { Server } from "socket.io";
 import {
   handleMakeRoom,
@@ -27,8 +28,8 @@ const socketOn = (server) => {
     });
 
     // 방 생성
-    socket.on("make room", ({ roomName, roomID, maxCnt}) => {
-      const handle = handleMakeRoom(roomName, roomID, maxCnt);
+    socket.on("make room", ({ roomName, roomID, roommode, maxCnt}) => {
+      const handle = handleMakeRoom(roomName, roomID, roommode, maxCnt);
       if (handle.bool) {
         rooms[roomID] = {
           roomName,
@@ -38,6 +39,7 @@ const socketOn = (server) => {
           bestPerformer: null,
           isPlay: false,
           members: [],
+          roommode
         };
 
         io.emit("give room list", rooms);
@@ -104,8 +106,13 @@ const socketOn = (server) => {
         });
         for (const member of rooms[roomID].members) {
             hpList.push([member.streamID, member.HP])
-          }
-        console.log(hpList);
+        }
+
+        const chief = room.members[0].socketID;
+        const chiefStream = room.members[0].streamID;
+        const status = chief === socket.id ? true : false;
+
+        io.to(socket.id).emit("wait", { status, roomID, chiefStream });
         io.to(roomID).emit("finish", (hpList));
       } else {
         io.to(socket.id).emit("finish room fail",handle);
@@ -133,7 +140,7 @@ const socketOn = (server) => {
     });
 
 
-    const randomNumberProducer =() => {
+    const randomNumberProducer = async () => {
       let randomNumber = [];
       for(var i = 0; i < 22; i++) {
           let myRandomNumber = Math.floor(Math.random() * gifCount);
@@ -147,18 +154,23 @@ const socketOn = (server) => {
     }
 
     // 게임 시작
-    socket.on("start", ({roomID}) => {
+    socket.on("start", async ({roomID}) => {
       let randomList = [];
       const room = rooms[roomID];
       const mySocket = socket.id;
       const handle = handleStart(roomID, room);
       let status = false;
-      randomList = randomNumberProducer();
+      randomList = await randomNumberProducer();
+      for (const member of rooms[roomID].members) {
+          member.HP = 100;
+      }
 
       if (handle.bool) {
         if (room.members[0].socketID == mySocket && room.count-1 === room.readyCount) {
           status = true;
           room.isPlay = true;
+          setTimeout(() => io.to(chooseReverseUser(rooms, roomID)).emit("send-reverse"), 30000);
+          setTimeout(() => io.to(chooseReverseUser(rooms, roomID)).emit("send-reverse"), 60000);
         }
         io.to(roomID).emit("start", status, randomList);
       } else {
@@ -188,6 +200,10 @@ const socketOn = (server) => {
         }
       }
     });
+
+    socket.on("reverse", ({ roomID }) => {
+      io.to(roomID).emit("reverse");
+    })
 
     // 전송하고 싶은 offer을 target에게 재전송
     socket.on("offer", (payload) => {
@@ -227,6 +243,17 @@ const socketOn = (server) => {
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
     socket.on("send_message", (data) => {
       socket.to(data.room).emit("receive_message", data);
+    });
+
+    socket.on("my_weapon", async (roomID, myGIF, myNickname) => {
+      try {
+        let randomList = [];
+        randomList = await randomNumberProducer();
+
+        io.to(roomID).emit("my_weapon", {randomList, myGIF, myNickname});
+      } catch(e) {
+        console.log(e)
+      }
     });
   });
 };

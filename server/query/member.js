@@ -1,5 +1,6 @@
 // database
 module.exports = {
+    findByMemberId: "SELECT member_id FROM members WHERE user_id=?",
     findByIdCnt: "SELECT COUNT(*) AS cnt FROM members WHERE user_id=?",
     findByNickCnt: "SELECT COUNT(*) AS cnt FROM members WHERE nick_name=?",
     findBySalt: "SELECT salt FROM members WHERE user_id=?",

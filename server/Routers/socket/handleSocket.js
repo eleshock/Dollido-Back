@@ -145,6 +145,8 @@ const handleOutRoom = (socket, rooms, io) => {
     if (rooms[theID] && rooms[theID].count > 0) {
         const chief = rooms[theID].members[0].streamID;
         io.to(theID).emit("chief", {chiefStream: chief});
+    } else if (rooms[theID] && rooms[theID].count == 0) {
+        delete rooms[theID];
     }
     io.to(theID).emit("give room list", rooms);
 }
