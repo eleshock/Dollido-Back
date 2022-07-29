@@ -35,7 +35,7 @@ router.get('/images/:key', (req, res) => {
     readStream.pipe(res)
 })
 
-router.post('/images', upload.single('image'), async (req, res) => {
+router.post('/images', upload.single('image'), authUtil, async (req, res) => {
     try{
         const file = req.file;
         console.log(file);

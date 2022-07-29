@@ -2,10 +2,12 @@
 const chooseReverseUser = (rooms, roomID) => {
     let untilMinHP = 10**6;
     let choosenUser = "anonymous";
-    for (const member of rooms[roomID].members) {
-        if (member.HP < untilMinHP) {
-            untilMinHP = member.HP;
-            choosenUser = member.socketID;
+    if (rooms && roomID && rooms[roomID]) {
+        for (const member of rooms[roomID].members) {
+            if (member.HP < untilMinHP) {
+                untilMinHP = member.HP;
+                choosenUser = member.socketID;
+            }
         }
     }
 
