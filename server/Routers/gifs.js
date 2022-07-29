@@ -11,7 +11,6 @@ const upload = multer({ dest: 'uploads/' })
 require('dotenv').config()
 const S3 = require('aws-sdk/clients/s3')
 
-
 const bucketName = process.env.AWS_BUCKET_NAME
 const region=process.env.AWS_BUCKET_REGION
 const accessKeyId=process.env.AWS_ACCESS_KEY
@@ -22,6 +21,22 @@ const s3 = new S3({
     accessKeyId,
     secretAccessKey
 })
+let gifCount = 0;
+let x;
+s3.listObjectsV2({Bucket:bucketName}).promise().then((r) => {
+    x = r.Contents.map(item=>item.Key);
+    gifCount = x.length;
+    console.log("여기서" + gifCount)
+    global.gifCount = gifCount;
+});
+
+router.get('/list-update', async(req,res)=> {
+    r = await s3.listObjectsV2({Bucket:bucketName}).promise();
+    x = r.Contents.map(item=>item.Key);
+    gifCount = x.length;
+    console.log("여기서" + gifCount)
+    global.gifCount = gifCount;
+});
 
 const util = require('util')
 const unlinkFile = util.promisify(fs.unlink)
@@ -77,15 +92,7 @@ router.post('/images', upload.single('image'), authUtil, async (req, res) => {
 })
 
 router.get('/list', async(req,res)=> {
-    let gifCount = 0;
-
     try{
-        let r = await s3.listObjectsV2({Bucket:bucketName}).promise()
-        let x = r.Contents.map(item=>item.Key);
-        gifCount = x.length;
-        console.log("여기서" + gifCount)
-        global.gifCount = gifCount;
-
         res.send(x)
     } catch (e) {
         console.error(e);
