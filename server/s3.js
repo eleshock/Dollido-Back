@@ -22,7 +22,7 @@ function uploadFile(file) {
     const uploadParams = {
       Bucket: bucketName,
       Body: fileStream,
-      Key: uuidv4() + file.originalname
+      Key: 'myWeapon/' + uuidv4() + file.originalname
     }
 
     return s3.upload(uploadParams).promise()
