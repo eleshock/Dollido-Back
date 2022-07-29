@@ -23,7 +23,7 @@ const s3 = new S3({
 })
 let gifCount = 0;
 let x;
-s3.listObjectsV2({Bucket:bucketName}).promise().then((r) => {
+s3.listObjectsV2({Bucket:bucketName, Delimiter: '/', Prefix: 'gifs/'}).promise().then((r) => {
     x = r.Contents.map(item=>item.Key);
     gifCount = x.length;
     global.gifCount = gifCount;
@@ -31,7 +31,7 @@ s3.listObjectsV2({Bucket:bucketName}).promise().then((r) => {
     console.log("여기서" + gifCount)
 
     router.get('/list-update', async(req,res)=> {
-        s3.listObjectsV2({Bucket:bucketName}).promise().then((rr) => {
+        s3.listObjectsV2({Bucket:bucketName, Delimiter: '/', Prefix: 'gifs/'}).promise().then((rr) => {
         x = rr.Contents.map(item=>item.Key);
         gifCount = x.length;
         global.gifCount = gifCount;
