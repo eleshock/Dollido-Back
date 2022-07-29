@@ -28,8 +28,8 @@ const socketOn = (server) => {
     });
 
     // 방 생성
-    socket.on("make room", ({ roomName, roomID, maxCnt}) => {
-      const handle = handleMakeRoom(roomName, roomID, maxCnt);
+    socket.on("make room", ({ roomName, roomID, roommode, maxCnt}) => {
+      const handle = handleMakeRoom(roomName, roomID, roommode, maxCnt);
       if (handle.bool) {
         rooms[roomID] = {
           roomName,
@@ -39,6 +39,7 @@ const socketOn = (server) => {
           bestPerformer: null,
           isPlay: false,
           members: [],
+          roommode
         };
 
         io.emit("give room list", rooms);
@@ -244,12 +245,12 @@ const socketOn = (server) => {
       socket.to(data.room).emit("receive_message", data);
     });
 
-    socket.on("my_weapon", async (roomID, myGIF) => {
+    socket.on("my_weapon", async (roomID, myGIF, myNickname) => {
       try {
         let randomList = [];
         randomList = await randomNumberProducer();
 
-        io.to(roomID).emit("my_weapon", {randomList, myGIF});
+        io.to(roomID).emit("my_weapon", {randomList, myGIF, myNickname});
       } catch(e) {
         console.log(e)
       }
