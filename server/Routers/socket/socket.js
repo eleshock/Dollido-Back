@@ -54,6 +54,12 @@ const socketOn = (server) => {
       const handle = handleJoinRoom(roomID, streamID, nickName, room);
       const mySocket = socket.id;
 
+      const messageData = {
+        room: roomID,
+        author: 'system',
+        message: `${nickName} 님이 입장했습니다`,
+      }
+
       if (handle.bool) {
         let members = room.members;
         const member = {
@@ -74,6 +80,9 @@ const socketOn = (server) => {
         
         
         console.log(members)
+
+        io.to(roomID).emit("onConnect", messageData);
+
       } else {
         io.to(mySocket).emit("join room fail", handle);
       }
