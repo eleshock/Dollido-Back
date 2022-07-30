@@ -64,28 +64,15 @@ const socketOn = (server) => {
           HP: initialHP,      // best performer 결정에 사용
         }
 
-        if (room) {
-          members.push(member);
-        } else {
-          members = [member];
-        }
+        members.forEach((info) => io.to(mySocket).emit("setting", info.streamID, info.isReady, info.nickName));
 
-        const otherUsers = members.filter((info) => info.socketID !== mySocket);
-
-        socket.join(roomID);
+        room ? members.push(member) : members = [member];
         room.count += 1;
-
-        if (otherUsers) {
-          socket.emit("other users", otherUsers);
-          console.log("socketID", mySocket);
-          console.log("streamID", streamID);
-          console.log("nickName", nickName);
-          socket.broadcast.to(roomID).emit("user joined", {
-            socketID: mySocket,
-            streamID,
-            nickName,
-          });
-        }
+        
+        socket.join(roomID);
+        socket.broadcast.to(roomID).emit("join room", mySocket);
+        
+        
         console.log(members)
       } else {
         io.to(mySocket).emit("join room fail", handle);
@@ -202,20 +189,20 @@ const socketOn = (server) => {
     });
 
     socket.on("reverse", ({ roomID }) => {
-      io.to(roomID).emit("reverse");
+      socket.to(roomID).emit("reverse");
     })
 
     // 전송하고 싶은 offer을 target에게 재전송
-    socket.on("offer", (payload) => {
-      io.to(payload.target).emit("offer", payload);
+    socket.on("offer", (offer, userID, socketID) => {
+      socket.to(userID).emit("offer", socketID, offer);
     });
 
-    socket.on("answer", (payload) => {
-      io.to(payload.target).emit("answer", payload);
+    socket.on("answer", (answer, userID, socketID) => {
+      socket.to(userID).emit("answer", answer, socketID);
     });
 
     socket.on("ice-candidate", (incoming) => {
-      socket.broadcast.to(incoming.roomID).emit("ice-candidate", incoming);
+      socket.to(incoming.userID).emit("ice-candidate", incoming.candidate, incoming.caller);
     });
 
     // 창을 완전히 닫았을 경우
