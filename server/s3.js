@@ -16,27 +16,47 @@ const s3 = new S3({
     secretAccessKey
 })
 
+exports.s3 = s3;
+
 // uploads a file to s3
-function uploadFile(file) {
+function uploadFile(file, dirPath='') {
     const fileStream = fs.createReadStream(file.path)
     const uploadParams = {
       Bucket: bucketName,
       Body: fileStream,
-      Key: 'myWeapon/' + uuidv4() + file.originalname
+      Key: dirPath + uuidv4() + file.originalname
     }
 
     return s3.upload(uploadParams).promise()
   }
-  exports.uploadFile = uploadFile
+
+exports.uploadFile = uploadFile;
 
 
 //   downloads a file from s3
-  function getFileStream(fileKey) {
-    const downloadParams = {
-      Key: fileKey,
-      Bucket: bucketName
-    }
-
-    return s3.getObject(downloadParams).createReadStream()
+function getFileStream(fileKey) {
+  const downloadParams = {
+    Key: fileKey,
+    Bucket: bucketName
   }
-  exports.getFileStream = getFileStream
+
+  return s3.getObject(downloadParams).createReadStream()
+}
+
+exports.getFileStream = getFileStream;
+
+
+// delete a file from s3
+function deleteObject(fileKey) {
+  const params = {
+    Bucket: bucketName,
+    Key: fileKey
+  };
+
+  return s3.deleteObject(params, (err, data) => {
+    if (err) console.log(err);
+    else console.log(data);
+  });
+}
+
+exports.deleteObject = deleteObject;

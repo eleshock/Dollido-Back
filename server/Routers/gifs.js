@@ -60,7 +60,7 @@ router.post('/images', upload.single('image'), authUtil, async (req, res) => {
     try{
         const file = req.file;
         console.log(file);
-        const result =  await uploadFile(file);
+        const result =  await uploadFile(file, 'myWeapon/');
         console.log(result);
         const member_id = req.idx
         let img_id = 0;

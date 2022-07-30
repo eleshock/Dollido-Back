@@ -13,7 +13,7 @@ const authUtil = async (req, res, next) => {
         
     // 유효하지 않는 토큰
     if (user === -2 || user.idx === undefined) 
-        return res.status(200).send({bool:false, msg: "유효하지 않는 토큰입니다"});
+        return res.status(200).send({bool:false, msg: "유효하지 않은 토큰입니다"});
     
     req.idx = user.idx;
     next();
