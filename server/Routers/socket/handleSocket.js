@@ -127,6 +127,12 @@ const handleOutRoom = (socket, rooms, io) => {
                     streamID: exUserStreamID
                 });
             }
+            const messageData = {
+                room: theID,
+                author: 'system',
+                message: `${nickname} 님이 퇴장했습니다`,
+            }
+            io.to(theID).emit("onDisconnect", messageData);
             
             socket.leave(theID);
             if (v.socketID !== socket.id) {
