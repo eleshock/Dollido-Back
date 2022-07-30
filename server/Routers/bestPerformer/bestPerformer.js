@@ -75,5 +75,13 @@ router.post("/get-video", (req, res) => {
     }
 });
 
+router.get("/my-videos", authUtil, async (req, res) => {
+    const member_id = req.idx;
+    
+    const result = await queryGet(bestVideoQuery.getMyVideos, [member_id]);
+    if (result) res.send(result);
+    else res.send({msg : "DB에서 데이터를 가져오는 데 실패했습니다."})
+})
+
 
 module.exports = router;
