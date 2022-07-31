@@ -12,6 +12,7 @@ import {
 } from "./handleSocket";
 
 const rooms = {};
+const reverseTime = {};
 const socketOn = (server) => {
   const io = new Server(server, {
     cors: {
@@ -39,7 +40,6 @@ const socketOn = (server) => {
           bestPerformer: null,
           isPlay: false,
           members: [],
-          sendReverse : [],
           roommode,
         };
 
@@ -101,8 +101,8 @@ const socketOn = (server) => {
         room.members.forEach((info) => {
           info.isReady = false;
         });
-        room.sendReverse.forEach((sendReverse)=> clearTimeout(sendReverse)); // Reverse아이템 보내는 setTimeout 중지
-        room.sendReverse = [];
+
+        reverseTime[roomID].forEach((sendReverse)=> clearTimeout(sendReverse)); // Reverse아이템 보내는 setTimeout 중지
         for (const member of rooms[roomID].members) {
             hpList.push([member.streamID, member.HP])
         }
@@ -171,8 +171,9 @@ const socketOn = (server) => {
           deleteVideoCache(room);
           const sendReverse1 = setTimeout(() => io.to(chooseReverseUser(rooms, roomID)).emit("send-reverse"), 30000);
           const sendReverse2 = setTimeout(() => io.to(chooseReverseUser(rooms, roomID)).emit("send-reverse"), 60000);
-          room.sendReverse.push(sendReverse1);
-          room.sendReverse.push(sendReverse2);
+          reverseTime[roomID] = []
+          reverseTime[roomID].push(sendReverse1);
+          reverseTime[roomID].push(sendReverse2);
         }
         io.to(roomID).emit("start", status, randomList);
       } else {
