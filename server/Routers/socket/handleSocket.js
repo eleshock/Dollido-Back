@@ -110,37 +110,43 @@ const handleReady = (roomID, room) => {
 const handleOutRoom = (socket, rooms, io) => {
     let theID = "";
     Object.entries(rooms).forEach((room) => {
-      let nickname = "";
-      let exUserStreamID = "";
-      let bool = false;
-      let readyBool = false;
-  
-      // 나머지 인원에게 나간 사람 정보 broadcast
-      const newRoomMembers = room[1].members.filter((v) => {
-        if (v.socketID === socket.id) {
-            bool = true;
-            readyBool = v.isReady;
-            theID = room[0];
-            nickname = v.nickName;
-            exUserStreamID = v.streamID;
-            io.to(theID).emit("out user", {
-                streamID: exUserStreamID
-            });
+        let nickname = "";
+        let exUserStreamID = "";
+        let bool = false;
+        let readyBool = false;
+        
+        // 나머지 인원에게 나간 사람 정보 broadcast
+        const newRoomMembers = room[1].members.filter((v) => {
+            if (v.socketID === socket.id) {
+                bool = true;
+                readyBool = v.isReady;
+                theID = room[0];
+                nickname = v.nickName;
+                exUserStreamID = v.streamID;
+                io.to(theID).emit("out user", {
+                    streamID: exUserStreamID
+                });
+            }
+            const messageData = {
+                room: theID,
+                author: 'system',
+                message: `${nickname} 님이 퇴장했습니다`,
+            }
+            io.to(theID).emit("onDisconnect", messageData);
+            
+            socket.leave(theID);
+            if (v.socketID !== socket.id) {
+            return v;
+            }
+        });
+        // rooms의 정보 갱신
+        if (bool) {
+            if (readyBool) {
+                room[1].readyCount -= 1
+            };
+            room[1].count -= 1
         }
-
-        socket.leave(theID);
-        if (v.socketID !== socket.id) {
-          return v;
-        }
-      });
-      // rooms의 정보 갱신
-      if (bool) {
-        if (readyBool) {
-            room[1].readyCount -= 1
-        };
-        room[1].count -= 1
-      }
-      room[1].members = newRoomMembers;
+        room[1].members = newRoomMembers;
     });
     if (rooms[theID] && rooms[theID].count > 0) {
         const chief = rooms[theID].members[0].streamID;
