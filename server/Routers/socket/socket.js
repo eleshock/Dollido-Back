@@ -25,9 +25,9 @@ const socketOn = (server) => {
   io.on("connection", (socket) => {
     //방 리스트
     socket.on("get room list", () => {
-      socket.emit("give room list", rooms);
+      io.to(socket.id).emit("give room list", rooms);
     });
-
+    
     // 방 생성
     socket.on("make room", ({ roomName, roomID, roommode, maxCnt}) => {
       const handle = handleMakeRoom(roomName, roomID, roommode, maxCnt);
@@ -48,7 +48,7 @@ const socketOn = (server) => {
         io.to(socket.id).emit("make room fail", handle);
       }
     });
-
+    
     // 방 참여
     socket.on("join room", ({ roomID, streamID, nickName, initialHP }) => {
       const room = rooms[roomID];
@@ -78,7 +78,7 @@ const socketOn = (server) => {
         
         socket.join(roomID);
         socket.broadcast.to(roomID).emit("join room", mySocket);
-        
+        socket.broadcast.to(roomID).emit("setting_add", member.streamID, member.nickName);
         
         console.log(members)
 
@@ -117,11 +117,11 @@ const socketOn = (server) => {
         io.to(socket.id).emit("finish room fail",handle);
       }
     });
-
+    
     socket.on("restart", ({ roomID }) => {
       io.to(roomID).emit("restart");
     })
-
+    
     // 방장 체크
     socket.on("wait", ({roomID}) => {
       const room = rooms[roomID];
@@ -207,30 +207,30 @@ const socketOn = (server) => {
     socket.on("reverse", ({ roomID }) => {
       io.to(roomID).emit("reverse");
     })
-
+    
     // 전송하고 싶은 offer을 target에게 재전송
     socket.on("offer", (offer, userID, socketID) => {
-      socket.to(userID).emit("offer", socketID, offer);
+      io.to(userID).emit("offer", socketID, offer);
     });
-
+    
     socket.on("answer", (answer, userID, socketID) => {
-      socket.to(userID).emit("answer", answer, socketID);
+      io.to(userID).emit("answer", answer, socketID);
     });
-
+    
     socket.on("ice-candidate", (incoming) => {
-      socket.to(incoming.userID).emit("ice-candidate", incoming.candidate, incoming.caller);
+      io.to(incoming.userID).emit("ice-candidate", incoming.candidate, incoming.caller);
     });
-
+    
     // 창을 완전히 닫았을 경우
     socket.on("disconnect", () => {
       handleOutRoom(socket, rooms, io);
     });
-
+    
     // 뒤로가기로 방을 나갔을 경우
     socket.on("out room", () => {
       handleOutRoom(socket, rooms, io);
     });
-
+    
     // 각 유저의 hp 전달
     socket.on("smile", (peerHP, roomID, peerID, peerStreamID) => {
       // HP 기록
@@ -242,12 +242,12 @@ const socketOn = (server) => {
       }
       socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID);
     });
-
+    
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
     socket.on("send_message", (data) => {
       socket.to(data.room).emit("receive_message", data);
     });
-
+    
     socket.on("my_weapon", async (roomID, myGIF, myNickname) => {
       try {
         let randomList = [];
