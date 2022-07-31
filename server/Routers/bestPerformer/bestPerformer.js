@@ -14,6 +14,7 @@ const uploadPath = __dirname + '/../../../' + destPath;
 const router = express.Router();
 const upload = multer({ dest: destPath });
 
+
 function getNowTime() {
     let now = new Date();
     now.setHours(now.getHours() + 9); // 한국 시간으로 세팅
@@ -23,6 +24,7 @@ function getNowTime() {
 
     return nowTime;
 }
+
 
 /** 유저가 자신의 웃는 영상(videoFile)을 user_nick와 함께 보내면 이를 저장하고 bestVideoPath에 보관 */
 router.post('/send-video', upload.single("video"), authUtil, async (req, res) => {
@@ -57,7 +59,7 @@ router.post('/send-video', upload.single("video"), authUtil, async (req, res) =>
 
 
 /** best performer의 id와 비디오 이름 던져줌 */
-router.post("/get-video", (req, res) => {
+router.post("/get-best", (req, res) => {
     const room = rooms[req.body.roomID];
 
     if (room === undefined) {
@@ -75,6 +77,7 @@ router.post("/get-video", (req, res) => {
     }
 });
 
+
 router.get("/my-videos", authUtil, async (req, res) => {
     const member_id = req.idx;
     
@@ -83,5 +86,20 @@ router.get("/my-videos", authUtil, async (req, res) => {
     else res.send({msg : "DB에서 데이터를 가져오는 데 실패했습니다."})
 })
 
+
+router.post("/delete-video", authUtil, async (req, res) => {
+    const video_id = req.body.video_id;
+    const server_name = req.body.server_name;
+
+    const dbDeletionRes = await queryGet(bestVideoQuery.deleteVideo, [video_id])
+    if (!dbDeletionRes) { // DB deletion fail
+        res.status(400).send({msg: "DB 삭제 실패"});
+        return;
+    }
+
+    await deleteObject(server_name);
+    
+    res.send({ msg : "삭제 성공 "});
+})
 
 module.exports = router;
