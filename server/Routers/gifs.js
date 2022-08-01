@@ -64,20 +64,24 @@ router.post('/images', upload.single('image'), authUtil, async (req, res) => {
         const file = req.file;
         let compressedFileStream;
         console.log(file);
-        if (file.mimetype === 'image/gif' && file.size >= 800000) {
+        if (file.mimetype === 'image/gif' && 1500000 <= file.size) {
             compressedFileStream = await sharp(file.path, { animated: true })
-                .resize({ width: 256, height: 256 })
-                .gif({ effort: 1, dither: 0 })
-                .withMetadata()
+                .webp({ effort: 1, quality: 50 })
+                .toBuffer()
+        } else if (file.mimetype === 'image/gif' && 800000 <= file.size < 1500000) {
+            compressedFileStream = await sharp(file.path, { animated: true })
+                .webp({ effort: 1, nearLossless: true })
+                .toBuffer()
+        } else if (file.mimetype === 'image/gif' && file.size < 800000) {
+            compressedFileStream = await sharp(file.path, { animated: true })
+                .webp({ effort: 1, lossless: true })
                 .toBuffer()
         }
 
         const member_id = req.idx
         let img_id = 0;
         let inventory_id = 0;
-        console.log("압축 이후", file)
         const result = await uploadFile(file, compressedFileStream, 'myWeapon/');
-        console.log(result);
         const args = [member_id, 0, file.originalname, result.key];
 
         await queryGet(gifsQuery.insertGif, args);

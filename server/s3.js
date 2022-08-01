@@ -22,15 +22,17 @@ const s3 = new S3({
 function uploadFile(file, compressedFileStream, dirPath = "") {
   console.log(file.size);
   let fileStream;
+  let fileName = file.originalname;
   if (!compressedFileStream) {
-    fileStream = fs.createReadStream(file.path)
+    fileStream = fs.createReadStream(file.path);
   } else {
     fileStream = compressedFileStream;
+    fileName = fileName.substring(0, fileName.indexOf('.')) + '.webp'
   }
   const uploadParams = {
     Bucket: bucketName,
     Body: fileStream,
-    Key: dirPath + uuidv4() + file.originalname
+    Key: dirPath + uuidv4() + fileName
   }
 
   return s3.upload(uploadParams).promise()
