@@ -7,6 +7,8 @@ import { uploadFile, deleteObject } from "../../s3";
 import queryGet from "../../modules/db_connect";
 import bestVideoQuery from "../../query/bestVideo";
 import { bestVideos } from "./bestPerformerFuncs";
+import memberQuery from "../../query/member";
+import changableFactorsQuery from "../../query/changable_factors";
 
 const destPath = 'uploads/'
 const uploadPath = __dirname + '/../../../' + destPath;
@@ -59,18 +61,48 @@ router.post('/send-video', upload.single("video"), authUtil, async (req, res) =>
 
 
 /** best performer의 id와 비디오 이름 던져줌 */
-router.post("/get-best", (req, res) => {
+router.post("/get-best", async (req, res) => {
     const room = rooms[req.body.roomID];
+    let member_id = 0;
 
     if (room === undefined) {
         res.status(404).send({ msg: `존재하지 않는 방입니다. roomID : ${req.body.roomID}` });
         return;
     }
 
+    const userNick = req.body.user_nick
+    console.log(userNick)
+    let member = await queryGet(memberQuery.findMemberIdByNickname, userNick)
+    console.log(member)
+    member_id = member[0].member_id
+    let result = await queryGet(changableFactorsQuery.getCF, member_id)
+
+    if (!result[0]) {
+        await queryGet(changableFactorsQuery.insertCF, [member_id, 0, 0, 0, 0, ""])
+        result = await queryGet(changableFactorsQuery.getCF, member_id)
+    }
+    
+    let [{ point, win, lose, ranking, tier }] = result;
+    let [hey] = await queryGet(changableFactorsQuery.rank, member_id);
+
     const bestPerformerNick = room.bestPerformer;
     if (bestPerformerNick == null) {
         res.status(404).send({ msg: "best performer가 지정되지 않았습니다." });
     } else {
+        if (bestPerformerNick === userNick) lose += 1
+        else win += 1
+
+        point = Math.round(win / (lose + win) * 100 * 100) / 100;
+        let countUser = await queryGet(changableFactorsQuery.findCnt)
+        let myRankByCount = hey.rank / countUser[0].cnt
+
+        if (myRankByCount <= 0.2) tier = '모아이'
+        else if (0.2 < myRankByCount <= 0.4) tier = '가오나시'
+        else if (0.4 < myRankByCount <= 0.7) tier = '모나리자'
+        else tier = '하회탈'
+
+        await queryGet(changableFactorsQuery.updateCFById, [point, win, lose, hey.rank, tier, member_id])
+
         const bestVideoName = bestVideos[bestPerformerNick];
         console.log('Best Video Name :', bestVideoName);
         res.send({ bestPerformerNick: bestPerformerNick, bestVideoName: bestVideoName });
