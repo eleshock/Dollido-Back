@@ -10,6 +10,9 @@ import {
   handleReady,
   handleOutRoom
 } from "./handleSocket";
+import queryGet from "../../modules/db_connect";
+import memberQuery from "../../query/member";
+import changableFactorsQuery from "../../query/changable_factors";
 
 const rooms = {};
 const reverseTime = {};
@@ -24,10 +27,26 @@ const socketOn = (server) => {
   // 소켓 연결
   io.on("connection", (socket) => {
     //방 리스트
-    socket.on("get room list", () => {
-      io.to(socket.id).emit("give room list", rooms);
-    });
-    
+    socket.on("get room list", async (nickname) => {
+      try {
+        if (!nickname) io.to(socket.id).emit("give room list", rooms);
+        else {
+          let member = await queryGet(memberQuery.findMemberIdByNickname, nickname)
+          console.log(member)
+          let member_id = member[0].member_id
+          let result = await queryGet(changableFactorsQuery.getCF, member_id)
+          if (!result[0]) {
+            await queryGet(changableFactorsQuery.insertCF, [member_id, 0, 0, 0, 0, ""])
+            result = await queryGet(changableFactorsQuery.getCF, member_id)
+          }
+
+          io.to(socket.id).emit("give room list", rooms, result);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+      });
+
     // 방 생성
     socket.on("make room", ({ roomName, roomID, roommode, maxCnt}) => {
       const handle = handleMakeRoom(roomName, roomID, roommode, maxCnt);
@@ -49,7 +68,7 @@ const socketOn = (server) => {
         io.to(socket.id).emit("make room fail", handle);
       }
     });
-    
+
     // 방 참여
     socket.on("join room", ({ roomID, streamID, nickName, initialHP }) => {
       const room = rooms[roomID];
@@ -76,11 +95,11 @@ const socketOn = (server) => {
 
         room ? members.push(member) : members = [member];
         room.count += 1;
-        
+
         socket.join(roomID);
         socket.broadcast.to(roomID).emit("join room", mySocket);
         socket.broadcast.to(roomID).emit("setting_add", member.streamID, member.nickName);
-        
+
         console.log(members)
 
         io.to(roomID).emit("onConnect", messageData);
@@ -111,7 +130,7 @@ const socketOn = (server) => {
           const chief = room.members[0].socketID;
           const chiefStream = room.members[0].streamID;
           const status = chief === socket.id ? true : false;
-  
+
           io.to(socket.id).emit("wait", { status, roomID, chiefStream });
           io.to(roomID).emit("finish", (hpList));
         }
@@ -119,11 +138,11 @@ const socketOn = (server) => {
         io.to(socket.id).emit("finish room fail",handle);
       }
     });
-    
+
     socket.on("restart", ({ roomID }) => {
       io.to(roomID).emit("restart");
     })
-    
+
     // 방장 체크
     socket.on("wait", ({roomID}) => {
       const room = rooms[roomID];
@@ -160,7 +179,7 @@ const socketOn = (server) => {
       const room = rooms[roomID];
       const mySocket = socket.id;
       const handle = handleStart(roomID, room);
-      
+
       if (handle.bool) {
         let status = false;
         randomList = await randomNumberProducer();
@@ -210,30 +229,30 @@ const socketOn = (server) => {
     socket.on("reverse", ({ roomID }) => {
       io.to(roomID).emit("reverse");
     })
-    
+
     // 전송하고 싶은 offer을 target에게 재전송
     socket.on("offer", (offer, userID, socketID) => {
       io.to(userID).emit("offer", socketID, offer);
     });
-    
+
     socket.on("answer", (answer, userID, socketID) => {
       io.to(userID).emit("answer", answer, socketID);
     });
-    
+
     socket.on("ice-candidate", (incoming) => {
       io.to(incoming.userID).emit("ice-candidate", incoming.candidate, incoming.caller);
     });
-    
+
     // 창을 완전히 닫았을 경우
     socket.on("disconnect", () => {
       handleOutRoom(socket, rooms, io);
     });
-    
+
     // 뒤로가기로 방을 나갔을 경우
     socket.on("out room", () => {
       handleOutRoom(socket, rooms, io);
     });
-    
+
     // 각 유저의 hp 전달
     socket.on("smile", (peerHP, roomID, peerID, peerStreamID, isJudgement) => {
       // HP 기록
@@ -252,12 +271,12 @@ const socketOn = (server) => {
       io.to(roomID).emit("judgement", peerStreamID);
     })
 
-    
+
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
     socket.on("send_message", (data) => {
       socket.to(data.room).emit("receive_message", data);
     });
-    
+
     socket.on("my_weapon", async (roomID, myGIF, myNickname) => {
       try {
         let randomList = [];
