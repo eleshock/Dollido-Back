@@ -100,21 +100,21 @@ const socketOn = (server) => {
         room.readyCount = 0
         room.zeusCount = 0;
         room.isPlay = false;
-        room.members.forEach((info) => {
-          info.isReady = false;
-        });
+        room.members.forEach((info) => {info.isReady = false;});
 
         reverseTime[roomID].forEach((sendReverse)=> clearTimeout(sendReverse)); // Reverse아이템 보내는 setTimeout 중지
         for (const member of rooms[roomID].members) {
             hpList.push([member.streamID, member.HP])
         }
 
-        const chief = room.members[0].socketID;
-        const chiefStream = room.members[0].streamID;
-        const status = chief === socket.id ? true : false;
-
-        io.to(socket.id).emit("wait", { status, roomID, chiefStream });
-        io.to(roomID).emit("finish", (hpList));
+        if (room.members[0]) {
+          const chief = room.members[0].socketID;
+          const chiefStream = room.members[0].streamID;
+          const status = chief === socket.id ? true : false;
+  
+          io.to(socket.id).emit("wait", { status, roomID, chiefStream });
+          io.to(roomID).emit("finish", (hpList));
+        }
       } else {
         io.to(socket.id).emit("finish room fail",handle);
       }
@@ -129,7 +129,7 @@ const socketOn = (server) => {
       const room = rooms[roomID];
       const handle = handleWait(roomID, room);
 
-      if (handle.bool) {
+      if (handle.bool && room.members[0]) {
         const chief = room.members[0].socketID;
         const chiefStream = room.members[0].streamID;
         const status = chief === socket.id ? true : false;
@@ -160,13 +160,14 @@ const socketOn = (server) => {
       const room = rooms[roomID];
       const mySocket = socket.id;
       const handle = handleStart(roomID, room);
-      let status = false;
-      randomList = await randomNumberProducer();
-      for (const member of rooms[roomID].members) {
-          member.HP = 100;
-      }
-
+      
       if (handle.bool) {
+        let status = false;
+        randomList = await randomNumberProducer();
+        for (const member of rooms[roomID].members) {
+            member.HP = 100;
+        }
+
         if (room.members[0].socketID == mySocket && room.count-1 === room.readyCount) {
           status = true;
           room.isPlay = true;
@@ -234,16 +235,23 @@ const socketOn = (server) => {
     });
     
     // 각 유저의 hp 전달
-    socket.on("smile", (peerHP, roomID, peerID, peerStreamID) => {
+    socket.on("smile", (peerHP, roomID, peerID, peerStreamID, isJudgement) => {
       // HP 기록
-      for (const member of rooms[roomID].members) {
-        if (member.streamID === peerStreamID) {
-          member.HP = peerHP;
-          break;
+      if (rooms[roomID]) {
+        for (const member of rooms[roomID].members) {
+          if (member.streamID === peerStreamID) {
+            member.HP = peerHP;
+            break;
+          }
         }
+        socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID, isJudgement);
       }
-      socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID);
     });
+
+    socket.on("judgement", (roomID, peerStreamID) => {
+      io.to(roomID).emit("judgement", peerStreamID);
+    })
+
     
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
     socket.on("send_message", (data) => {

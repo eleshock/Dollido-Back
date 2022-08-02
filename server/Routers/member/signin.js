@@ -27,20 +27,24 @@ const handleValidate = (user_id, user_pw) => {
 const myGif = async (myID) => {
     let imgId = 0;
     let imageServer = "";
-    await queryGet(inventoryQuery.findImageById, [myID])
-        .then((info) => {
-            if(info[0]) {
-                imgId = info[0].image_id;
-            }
-        });
-
-    await queryGet(gifsQuery.findImageById, [imgId])
-        .then((info) => {
-            if(info[0]) {
-                imageServer = info[0].image_server;
-            }
-        })
-    return imageServer;
+    try {
+        await queryGet(inventoryQuery.findImageById, [myID])
+            .then((info) => {
+                if(info[0]) {
+                    imgId = info[0].image_id;
+                }
+            });
+    
+        await queryGet(gifsQuery.findImageById, [imgId])
+            .then((info) => {
+                if(info[0]) {
+                    imageServer = info[0].image_server;
+                }
+            })
+        return imageServer;
+    } catch(e) {
+        console.log(e);
+    }
 }
 
 router.post("/", async (req, res) => {

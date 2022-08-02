@@ -37,16 +37,19 @@ router.post("/nickCheck", async(req, res) => {
     let user_nick = req.body.user_nick;
     let bool = true;
     let msg = "사용가능한 닉네임 입니다";
-
-    if(user_id == "" || user_id == undefined) {
-        bool = false;
-        msg = "닉네임을 입력해주세요";
-    } else if(!await nickCheck(user_nick)) {
-        bool = false;
-        msg = "중복된 닉네임 입니다";
+    try {
+        if(user_id == "" || user_id == undefined) {
+            bool = false;
+            msg = "닉네임을 입력해주세요";
+        } else if(!await nickCheck(user_nick)) {
+            bool = false;
+            msg = "중복된 닉네임 입니다";
+        }
+    
+        res.status(200).send({bool: bool, msg: msg});
+    } catch(e) {
+        console.log(e);
     }
-
-    res.status(200).send({bool: bool, msg: msg});
 });
 
 router.post("/idCheck", async(req, res) => {
@@ -54,15 +57,19 @@ router.post("/idCheck", async(req, res) => {
     let bool = true;
     let msg = "사용가능한 아이디 입니다";
 
-    if(user_id == "" || user_id == undefined) {
-        bool = false;
-        msg = "아이디를 입력해주세요";
-    } else if(!await idCheck(user_id)) {
-        bool = false;
-        msg = "중복된 아이디 입니다";
+    try {
+        if(user_id == "" || user_id == undefined) {
+            bool = false;
+            msg = "아이디를 입력해주세요";
+        } else if(!await idCheck(user_id)) {
+            bool = false;
+            msg = "중복된 아이디 입니다";
+        }
+    
+        res.status(200).send({bool: bool, msg: msg});
+    } catch(e) {
+        console.log(e);
     }
-
-    res.status(200).send({bool: bool, msg: msg});
 });
 
 router.post("/", async (req, res) => {
