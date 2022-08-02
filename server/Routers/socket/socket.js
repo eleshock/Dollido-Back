@@ -232,7 +232,7 @@ const socketOn = (server) => {
     });
     
     // 각 유저의 hp 전달
-    socket.on("smile", (peerHP, roomID, peerID, peerStreamID) => {
+    socket.on("smile", (peerHP, roomID, peerID, peerStreamID, isJudgement) => {
       // HP 기록
       for (const member of rooms[roomID].members) {
         if (member.streamID === peerStreamID) {
@@ -240,8 +240,17 @@ const socketOn = (server) => {
           break;
         }
       }
-      socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID);
+      socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID, isJudgement);
     });
+
+    socket.on("zeus", (roomID) => {
+      io.to(roomID).emit("zeus");
+    })
+
+    socket.on("judgement", (roomID, peerStreamID) => {
+      io.to(roomID).emit("judgement", peerStreamID);
+    })
+
     
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
     socket.on("send_message", (data) => {
