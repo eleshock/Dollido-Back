@@ -37,6 +37,7 @@ const socketOn = (server) => {
           maxCnt,
           count: 0,
           readyCount: 0,
+          zeusCount: 0,
           bestPerformer: null,
           isPlay: false,
           members: [],
@@ -97,6 +98,7 @@ const socketOn = (server) => {
       if (handle.bool) {
         room.bestPerformer = chooseBestPerformer(rooms, roomID);
         room.readyCount = 0
+        room.zeusCount = 0;
         room.isPlay = false;
         room.members.forEach((info) => {info.isReady = false;});
 
@@ -233,7 +235,7 @@ const socketOn = (server) => {
     });
     
     // 각 유저의 hp 전달
-    socket.on("smile", (peerHP, roomID, peerID, peerStreamID) => {
+    socket.on("smile", (peerHP, roomID, peerID, peerStreamID, isJudgement) => {
       // HP 기록
       if (rooms[roomID]) {
         for (const member of rooms[roomID].members) {
@@ -242,9 +244,14 @@ const socketOn = (server) => {
             break;
           }
         }
-        socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID);
+        socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID, isJudgement);
       }
     });
+
+    socket.on("judgement", (roomID, peerStreamID) => {
+      io.to(roomID).emit("judgement", peerStreamID);
+    })
+
     
     // 유저로부터 채팅 메시지를 받아서 다른 유저에게 뿌려줌
     socket.on("send_message", (data) => {
@@ -259,6 +266,24 @@ const socketOn = (server) => {
         io.to(roomID).emit("my_weapon", {randomList, myGIF, myNickname});
       } catch(e) {
         console.log(e)
+      }
+    });
+
+    socket.on("zeus_appear", (roomID) => {
+      if (!rooms[roomID]) return;
+      rooms[roomID].zeusCount += 1;
+      console.log("Zeus Count :", rooms[roomID].zeusCount);
+      if (rooms[roomID].zeusCount === 1) {
+        io.to(roomID).emit("zeus_appear");
+      }
+    });
+
+    socket.on("zeus_disappear", (roomID) => {
+      if (!rooms[roomID]) return;
+      rooms[roomID].zeusCount -= 1;
+      console.log("Zeus Count :", rooms[roomID].zeusCount);
+      if (rooms[roomID].zeusCount === 0) {
+        io.to(roomID).emit("zeus_disappear");
       }
     });
   });
