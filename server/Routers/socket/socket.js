@@ -245,10 +245,6 @@ const socketOn = (server) => {
       socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID, isJudgement);
     });
 
-    socket.on("zeus", (roomID) => {
-      io.to(roomID).emit("zeus");
-    })
-
     socket.on("judgement", (roomID, peerStreamID) => {
       io.to(roomID).emit("judgement", peerStreamID);
     })
