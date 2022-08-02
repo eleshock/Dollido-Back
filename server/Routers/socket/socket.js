@@ -37,6 +37,7 @@ const socketOn = (server) => {
           maxCnt,
           count: 0,
           readyCount: 0,
+          zeusCount: 0,
           bestPerformer: null,
           isPlay: false,
           members: [],
@@ -97,6 +98,7 @@ const socketOn = (server) => {
       if (handle.bool) {
         room.bestPerformer = chooseBestPerformer(rooms, roomID);
         room.readyCount = 0
+        room.zeusCount = 0;
         room.isPlay = false;
         room.members.forEach((info) => {
           info.isReady = false;
@@ -265,6 +267,24 @@ const socketOn = (server) => {
         io.to(roomID).emit("my_weapon", {randomList, myGIF, myNickname});
       } catch(e) {
         console.log(e)
+      }
+    });
+
+    socket.on("zeus_appear", (roomID) => {
+      if (!rooms[roomID]) return;
+      rooms[roomID].zeusCount += 1;
+      console.log("Zeus Count :", rooms[roomID].zeusCount);
+      if (rooms[roomID].zeusCount === 1) {
+        io.to(roomID).emit("zeus_appear");
+      }
+    });
+
+    socket.on("zeus_disappear", (roomID) => {
+      if (!rooms[roomID]) return;
+      rooms[roomID].zeusCount -= 1;
+      console.log("Zeus Count :", rooms[roomID].zeusCount);
+      if (rooms[roomID].zeusCount === 0) {
+        io.to(roomID).emit("zeus_disappear");
       }
     });
   });
