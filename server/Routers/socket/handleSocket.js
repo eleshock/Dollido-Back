@@ -123,8 +123,6 @@ const handleOutRoom = (socket, rooms, io) => {
                 theID = room[0];
                 nickname = v.nickName;
                 exUserStreamID = v.streamID;
-                console.log(v.streamID)
-                console.log(room[1].chief.streamID)
                 if(v.streamID === room[1].chief.streamID){
                     chiefCheck = true;
                 }
@@ -154,12 +152,10 @@ const handleOutRoom = (socket, rooms, io) => {
         }
         room[1].members = newRoomMembers;
 
-        console.log(chiefCheck)
         if(chiefCheck && room[1].members[0] && room[1].members[0].isReady)
         {
             room[1].readyCount -= 1
         }
-        console.log(room[1].readyCount)
 
     });
     if (rooms[theID] && rooms[theID].count > 0) {

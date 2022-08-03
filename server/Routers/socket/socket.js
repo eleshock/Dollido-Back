@@ -102,9 +102,6 @@ const socketOn = (server) => {
         socket.broadcast.to(roomID).emit("join room", mySocket);
         socket.broadcast.to(roomID).emit("setting_add", member.streamID, member.nickName);
 
-        console.log(members)
-        console.log(room.chief.streamID)
-
         io.to(roomID).emit("onConnect", messageData);
 
       } else {
@@ -227,7 +224,6 @@ const socketOn = (server) => {
           });
         }
       }
-      console.log(room.readyCount)
     });
 
     socket.on("reverse", ({ roomID }) => {
