@@ -263,7 +263,7 @@ const socketOn = (server) => {
             break;
           }
         }
-        socket.to(roomID).emit("smile", peerHP, peerID, peerStreamID, isJudgement);
+        socket.to(roomID).emit("smile", peerHP, peerStreamID, isJudgement);
       }
     });
 
