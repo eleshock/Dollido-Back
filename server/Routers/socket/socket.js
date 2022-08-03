@@ -61,6 +61,7 @@ const socketOn = (server) => {
           isPlay: false,
           members: [],
           roommode,
+          chief: null
         };
 
         io.emit("give room list", rooms);
@@ -92,8 +93,9 @@ const socketOn = (server) => {
         }
 
         members.forEach((info) => io.to(mySocket).emit("setting", info.streamID, info.isReady, info.nickName));
-
-        room ? members.push(member) : members = [member];
+        
+        room ? members.push(member) : members = [member]
+        room.chief = room.members[0]
         room.count += 1;
 
         socket.join(roomID);
@@ -101,6 +103,7 @@ const socketOn = (server) => {
         socket.broadcast.to(roomID).emit("setting_add", member.streamID, member.nickName);
 
         console.log(members)
+        console.log(room.chief.streamID)
 
         io.to(roomID).emit("onConnect", messageData);
 
@@ -214,16 +217,17 @@ const socketOn = (server) => {
         if (member[0]) {
           const readyCount = room.readyCount;
           let isReady = member[0].isReady;
-
+          
           room.readyCount = isReady ? readyCount - 1 : readyCount + 1;
           member[0].isReady = !isReady;
-
+          
           io.to(roomID).emit("ready", {
             streamID: member[0].streamID,
             isReady: member[0].isReady
           });
         }
       }
+      console.log(room.readyCount)
     });
 
     socket.on("reverse", ({ roomID }) => {

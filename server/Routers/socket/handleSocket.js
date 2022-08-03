@@ -114,8 +114,8 @@ const handleOutRoom = (socket, rooms, io) => {
         let exUserStreamID = "";
         let bool = false;
         let readyBool = false;
-        
         // 나머지 인원에게 나간 사람 정보 broadcast
+        let chiefCheck = false;
         const newRoomMembers = room[1].members.filter((v) => {
             if (v.socketID === socket.id) {
                 bool = true;
@@ -123,6 +123,11 @@ const handleOutRoom = (socket, rooms, io) => {
                 theID = room[0];
                 nickname = v.nickName;
                 exUserStreamID = v.streamID;
+                console.log(v.streamID)
+                console.log(room[1].chief.streamID)
+                if(v.streamID === room[1].chief.streamID){
+                    chiefCheck = true;
+                }
                 io.to(theID).emit("out user", {
                     streamID: exUserStreamID
                 });
@@ -144,9 +149,18 @@ const handleOutRoom = (socket, rooms, io) => {
             if (readyBool) {
                 room[1].readyCount -= 1
             };
+            
             room[1].count -= 1
         }
         room[1].members = newRoomMembers;
+
+        console.log(chiefCheck)
+        if(chiefCheck && room[1].members[0] && room[1].members[0].isReady)
+        {
+            room[1].readyCount -= 1
+        }
+        console.log(room[1].readyCount)
+
     });
     if (rooms[theID] && rooms[theID].count > 0) {
         const chief = rooms[theID].members[0].streamID;
