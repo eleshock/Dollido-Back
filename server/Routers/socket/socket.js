@@ -254,7 +254,7 @@ const socketOn = (server) => {
     });
 
     // 각 유저의 hp 전달
-    socket.on("smile", (peerHP, roomID, peerID, peerStreamID, isJudgement) => {
+    socket.on("smile", (peerHP, roomID, peerStreamID, status) => {
       // HP 기록
       if (rooms[roomID]) {
         for (const member of rooms[roomID].members) {
@@ -263,7 +263,20 @@ const socketOn = (server) => {
             break;
           }
         }
-        socket.to(roomID).emit("smile", peerHP, peerStreamID, isJudgement);
+        socket.to(roomID).emit("smile", peerHP, peerStreamID, status);
+      }
+    });
+
+    socket.on("zeus", (peerHP, roomID, peerStreamID) => {
+      // HP 기록
+      if (rooms[roomID]) {
+        for (const member of rooms[roomID].members) {
+          if (member.streamID === peerStreamID) {
+            member.HP = peerHP;
+            break;
+          }
+        }
+        socket.to(roomID).emit("zeus", peerHP, peerStreamID);
       }
     });
 
