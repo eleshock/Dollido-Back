@@ -36,7 +36,7 @@ const socketOn = (server) => {
           let member_id = member[0].member_id
           let result = await queryGet(changableFactorsQuery.getCF, member_id)
           if (!result[0]) {
-            await queryGet(changableFactorsQuery.insertCF, [member_id, 0, 0, 0, 0, ""])
+            await queryGet(changableFactorsQuery.insertCF, [member_id, 0, 0, 0, 0, "하회탈"])
             result = await queryGet(changableFactorsQuery.getCF, member_id)
           }
 
